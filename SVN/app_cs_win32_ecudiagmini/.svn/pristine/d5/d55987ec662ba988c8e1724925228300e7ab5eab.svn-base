@@ -1,0 +1,723 @@
+/*
+ * Object: HJS.ECU.VolatileData
+ * Description: Object of volatile data placed in RAM of RTC
+ * 
+ * $LastChangedDate$
+ * $LastChangedRevision$
+ * $LastChangedBy$
+ * $HeadURL$
+ * 
+ * LastReviewDate: 
+ * LastReviewRevision: 
+ * LastReviewBy: 
+ */
+using System;
+using System.Collections.Generic;
+
+namespace HJS.ECU
+{
+    /// <summary>Volatile data object aka RTC data</summary>
+    public class VolatileData
+    {
+        /// <summary>Byte buffer of complete data</summary>
+        private byte[] mRawData;
+
+        /// <summary>Items of volatile values</summary>
+        public List<InternalDataItem> Items = null;
+
+        /// <summary>Number of values</summary>
+        public UInt16 NumberOfValues = 21;
+
+        /// <summary>Compatibility of volatile data</summary>
+        private byte mSoftwareRevision;
+
+        /// <summary>Accessors of volatile data revision</summary>
+        public byte SoftwareRevision
+        {
+            get { return mSoftwareRevision; }
+            set { mSoftwareRevision = value; }
+        }
+
+        /// <summary>Default constructor</summary>
+        public VolatileData()
+        {
+            mSoftwareRevision = 8;
+            mRawData = new byte[64];
+        }
+
+        /// <summary>Overloaded constructor</summary>
+        /// <param name="Revision">Compatible revision</param>
+        public VolatileData(byte Revision)
+        {
+            mSoftwareRevision = Revision;
+            mRawData = new byte[64];
+        }
+
+        /// <summary>RTC time</summary>
+        public DateTime EcuTime
+        {
+            get
+            {
+                byte y = BinaryCodedDecimals.BCDToByte(mRawData[6]);
+                byte mo = BinaryCodedDecimals.BCDToByte((byte)(mRawData[5] & 0x1F));
+                byte d = BinaryCodedDecimals.BCDToByte((byte)(mRawData[4] & 0x3F));
+                byte h = BinaryCodedDecimals.BCDToByte((byte)(mRawData[2] & 0x1F));
+                byte mi = BinaryCodedDecimals.BCDToByte((byte)(mRawData[1] & 0x7F));
+                byte s = BinaryCodedDecimals.BCDToByte((byte)(mRawData[0] & 0x7F));
+                mo = mo > 12 ? (byte)0 : mo;
+                d = d > 31 ? (byte)0 : d;
+                h = h > 23 ? (byte)0 : h;
+                mi = mi > 59 ? (byte)0 : mi;
+                s = s > 59 ? (byte)0 : s;
+                return new DateTime(y + 2000, mo, d, h, mi, s);
+            }
+        }
+
+        /// <summary>RTC control</summary>
+        public byte RtcControl
+        {
+            get { return mRawData[7]; }
+        }
+
+        /// <summary>ECU status</summary>
+        public byte EcuStatus
+        {
+            get { return mRawData[8]; }
+        }
+
+        /// <summary>Last Regeneration of Filter (in running minutes)</summary>
+        public UInt32 LastThermRegeneration
+        {
+            get
+            {
+                UInt32 ret = (UInt32)(mRawData[12] * 256);
+                ret += mRawData[11];
+                ret = (UInt32)(ret * 256);
+                ret += mRawData[10];
+                ret = (UInt32)(ret * 256);
+                ret += mRawData[9];
+                return ret;
+            }
+        }
+
+        /// <summary>Current position in step of acqui flash ring memory</summary>
+        public byte FlashAqRingPos
+        {
+            get { return mRawData[13]; }
+        }
+
+        /// <summary>Current step position of step in acqui flash ring memory</summary>
+        public UInt16 FlashAqStepPos
+        {
+            get
+            {
+                UInt16 ret = (UInt16)(mRawData[15] * 256);
+                ret += mRawData[14];
+                return ret;
+            }
+        }
+
+        /// <summary>Current error ring sector</summary>
+        public byte FlashErrRingSector
+        {
+            get { return mRawData[16]; }
+        }
+
+        /// <summary>Current error ring address</summary>
+        public UInt16 FlashErrRingAddress
+        {
+            get
+            {
+                UInt16 ret = (UInt16)(mRawData[18] * 256);
+                ret += mRawData[17];
+                return ret;
+            }
+        }
+
+        /// <summary>Current dosing concentration</summary>
+        public UInt32 IstKonzentration
+        {
+            get
+            {
+                UInt32 ret = (UInt32)(mRawData[22] * 256);
+                ret += mRawData[21];
+                ret = (UInt32)(ret * 256);
+                ret += mRawData[20];
+                ret = (UInt32)(ret * 256);
+                ret += mRawData[19];
+                return ret;
+            }
+        }
+
+        /// <summary>Current fuel level</summary>
+        public UInt32 Tankinhalt
+        {
+            get
+            {
+                UInt32 ret;
+                if (mSoftwareRevision == 8)
+                {
+                    ret = (UInt32)(mRawData[24] * 256);
+                    ret += mRawData[23];
+                }
+                else
+                {
+                    ret = (UInt32)(mRawData[26] * 256);
+                    ret += mRawData[25];
+                    ret = (UInt32)(ret * 256);
+                    ret += mRawData[24];
+                    ret = (UInt32)(ret * 256);
+                    ret += mRawData[23];
+                }
+                return ret;
+            }
+        }
+
+        /// <summary>Current total dosing pulses</summary>
+        public UInt32 Dosierimpulse
+        {
+            get
+            {
+                UInt32 ret;
+                if (mSoftwareRevision == 8)
+                {
+                    ret = (UInt32)(mRawData[28] * 256);
+                    ret += mRawData[27];
+                    ret = (UInt32)(ret * 256);
+                    ret += mRawData[26];
+                    ret = (UInt32)(ret * 256);
+                    ret += mRawData[25];
+                }
+                else
+                {
+                    ret = (UInt32)(mRawData[30] * 256);
+                    ret += mRawData[29];
+                    ret = (UInt32)(ret * 256);
+                    ret += mRawData[28];
+                    ret = (UInt32)(ret * 256);
+                    ret += mRawData[27];
+                }
+                return ret;
+            }
+        }
+
+        /// <summary>Power-up counter</summary>
+        public UInt16 PowerUpCounter
+        {
+            get
+            {
+                UInt16 ret;
+                if (mSoftwareRevision == 8)
+                {
+                    ret = (UInt16)(mRawData[30] * 256);
+                    ret += mRawData[29];
+                }
+                else
+                {
+                    ret = (UInt16)(mRawData[32] * 256);
+                    ret += mRawData[31];
+                }
+                return ret;
+            }
+        }
+
+        /// <summary>Running minutes</summary>
+        public UInt32 BetriebsMinuten
+        {
+            get
+            {
+                UInt32 ret;
+                if (mSoftwareRevision == 8)
+                {
+                    ret = (UInt32)(mRawData[34] * 256);
+                    ret += mRawData[33];
+                    ret = (UInt32)(ret * 256);
+                    ret += mRawData[32];
+                    ret = (UInt32)(ret * 256);
+                    ret += mRawData[31];
+                }
+                else
+                {
+                    ret = (UInt32)(mRawData[36] * 256);
+                    ret += mRawData[35];
+                    ret = (UInt32)(ret * 256);
+                    ret += mRawData[34];
+                    ret = (UInt32)(ret * 256);
+                    ret += mRawData[33];
+                }
+                return ret;
+            }
+        }
+
+        /// <summary>Current dosing pulses taken from addititve tank</summary>
+        public UInt32 DosierimpulseTank
+        {
+            get
+            {
+                UInt32 ret;
+                if (mSoftwareRevision == 8)
+                {
+                    ret = (UInt32)(mRawData[38] * 256);
+                    ret += mRawData[37];
+                    ret = (UInt32)(ret * 256);
+                    ret += mRawData[36];
+                    ret = (UInt32)(ret * 256);
+                    ret += mRawData[35];
+                }
+                else
+                {
+                    ret = (UInt32)(mRawData[40] * 256);
+                    ret += mRawData[39];
+                    ret = (UInt32)(ret * 256);
+                    ret += mRawData[38];
+                    ret = (UInt32)(ret * 256);
+                    ret += mRawData[37];
+                }
+                return ret;
+            }
+        }
+
+        /// <summary>Current dosing pulses dosed since change of filter</summary>
+        public UInt32 DosierimpulseFilter
+        {
+            get
+            {
+                UInt32 ret;
+                if (mSoftwareRevision == 8)
+                {
+                    ret = (UInt32)(mRawData[42] * 256);
+                    ret += mRawData[41];
+                    ret = (UInt32)(ret * 256);
+                    ret += mRawData[40];
+                    ret = (UInt32)(ret * 256);
+                    ret += mRawData[39];
+                }
+                else
+                {
+                    ret = (UInt32)(mRawData[44] * 256);
+                    ret += mRawData[43];
+                    ret = (UInt32)(ret * 256);
+                    ret += mRawData[42];
+                    ret = (UInt32)(ret * 256);
+                    ret += mRawData[41];
+                }
+                return ret;
+            }
+        }
+
+        /// <summary>Sum of soot in filter</summary>
+        public UInt32 Beladungssumme
+        {
+            get
+            {
+                UInt32 ret;
+                if (mSoftwareRevision == 8)
+                {
+                    ret = (UInt32)(mRawData[46] * 256);
+                    ret += mRawData[45];
+                    ret = (UInt32)(ret * 256);
+                    ret += mRawData[44];
+                    ret = (UInt32)(ret * 256);
+                    ret += mRawData[43];
+                }
+                else
+                {
+                    ret = (UInt32)(mRawData[48] * 256);
+                    ret += mRawData[47];
+                    ret = (UInt32)(ret * 256);
+                    ret += mRawData[46];
+                    ret = (UInt32)(ret * 256);
+                    ret += mRawData[45];
+                }
+                return ret;
+            }
+        }
+
+        /// <summary>Pressure offset</summary>
+        public byte PressureOffset
+        {
+            get
+            {
+                if (mSoftwareRevision == 8)
+                {
+                    return mRawData[47];
+                }
+                else
+                {
+                    return mRawData[49];
+                }
+            }
+        }
+
+        /// <summary>Offset for load AD value</summary>
+        public Int16 LastADOffset
+        {
+            get
+            {
+                Int16 ret;
+                if (mSoftwareRevision == 8)
+                {
+                    ret = (Int16)(mRawData[49] * 256);
+                    ret += mRawData[48];
+                }
+                else
+                {
+                    ret = (Int16)(mRawData[51] * 256);
+                    ret += mRawData[50];
+                }
+                return ret;
+            }
+        }
+
+        /// <summary>Load NotCfg flag</summary>
+        public byte LoadNotCfgFlag
+        {
+            get
+            {
+                if (mSoftwareRevision == 8)
+                {
+                    return mRawData[50];
+                }
+                else
+                {
+                    return mRawData[52];
+                }
+            }
+        }
+
+        /// <summary>SPI-Flash debug counter</summary>
+        public UInt16 SpiFlashDebug
+        {
+            get
+            {
+                UInt16 ret;
+                if (mSoftwareRevision == 8)
+                {
+                    ret = (UInt16)(mRawData[52] * 256);
+                    ret += mRawData[51];
+                }
+                else
+                {
+                    ret = (UInt16)(mRawData[54] * 256);
+                    ret += mRawData[53];
+                }
+                return ret;
+            }
+        }
+
+        /// <summary>Checksum</summary>
+        public UInt16 Checksum
+        {
+            get
+            {
+                UInt16 ret = (UInt16)(mRawData[63] * 256);
+                ret += mRawData[62];
+                return ret;
+            }
+        }
+
+        /// <summary>Read volatile data from byte array</summary>
+        /// <param name="SourceData">Reference to source byte array</param>
+        /// <returns>0 on success, see ReturnValue</returns>
+        public ReturnValue Read(ref byte[] SourceData)
+        {
+            if (SourceData.Length != mRawData.Length)
+            {
+                return ReturnValue.SizeMismatch;
+            }
+            else
+            {
+                for (byte b = 0; b < SourceData.Length; b++)
+                {
+                    mRawData[b] = SourceData[b];
+                }
+                Parse();
+                return ReturnValue.NoError;
+            }
+        }
+
+        /// <summary>Get volatile value as string</summary>
+        /// <param name="Position">Position of volatile value</param>
+        /// <returns>Volatile value as string</returns>
+        public string GetVolatileValue(UInt16 Position)
+        {
+            string ret = "";
+            switch (Position)
+            {
+                case 0:
+                    ret = String.Format("ECU Zeit = {0} UTC", EcuTime.ToString("dd.MM.yyyy HH:mm:ss"));
+                    break;
+                case 1:
+                    ret = String.Format("RTC Control = {0}", RtcControl);
+                    break;
+                case 2:
+                    ret = String.Format("ECU Status = {0}", EcuStatus);
+                    break;
+                case 3:
+                    ret = String.Format("letzte Reg. = {0}", LastThermRegeneration);
+                    break;
+                case 4:
+                    ret = String.Format("AQ Ring Pos. = {0}", FlashAqRingPos);
+                    break;
+                case 5:
+                    ret = String.Format("AQ Ring Step = {0}", FlashAqStepPos);
+                    break;
+                case 6:
+                    ret = String.Format("ERR Ring Sector = {0}", FlashErrRingSector);
+                    break;
+                case 7:
+                    ret = String.Format("ERR Ring Addr. = {0}", FlashErrRingAddress);
+                    break;
+                case 8:
+                    ret = String.Format("Ist Konzentration = {0}", IstKonzentration);
+                    break;
+                case 9:
+                    ret = String.Format("Tankinhalt = {0}", Tankinhalt);
+                    break;
+                case 10:
+                    ret = String.Format("Dosierimpulse = {0}", Dosierimpulse);
+                    break;
+                case 11:
+                    ret = String.Format("PowerUp Counter = {0}", PowerUpCounter);
+                    break;
+                case 12:
+                    ret = String.Format("Betriebsminuten = {0}", BetriebsMinuten);
+                    break;
+                case 13:
+                    ret = String.Format("Dosierimpulse Tank = {0}", DosierimpulseTank);
+                    break;
+                case 14:
+                    ret = String.Format("Dosierimpulse Filter = {0}", DosierimpulseFilter);
+                    break;
+                case 15:
+                    ret = String.Format("Beladungssumme = {0}", Beladungssumme);
+                    break;
+                case 16:
+                    ret = String.Format("Pressure Offset = {0}", PressureOffset);
+                    break;
+                case 17:
+                    ret = String.Format("Last AD Offset = {0}", LastADOffset);
+                    break;
+                case 18:
+                    ret = String.Format("Load NotCfg Flag = {0}", LoadNotCfgFlag);
+                    break;
+                case 19:
+                    ret = String.Format("SPI-Flash Debug Counter = {0}", SpiFlashDebug);
+                    break;
+                case 20:
+                    ret = String.Format("CRC16 = {0}", Checksum);
+                    break;
+                default:
+                    ret = "N/A";
+                    break;
+            }
+            return ret;
+        }
+
+        /// <summary>Parse byte array buffer to item list</summary>
+        private void Parse()
+        {
+            Items = new List<InternalDataItem>();
+            int Pos = 0;
+
+            InternalDataItem it_time = new InternalDataItem();
+            byte y = BinaryCodedDecimals.BCDToByte(mRawData[6]);
+            byte mo = BinaryCodedDecimals.BCDToByte((byte)(mRawData[5] & 0x1F));
+            byte d = BinaryCodedDecimals.BCDToByte((byte)(mRawData[4] & 0x3F));
+            byte h = BinaryCodedDecimals.BCDToByte((byte)(mRawData[2] & 0x1F));
+            byte mi = BinaryCodedDecimals.BCDToByte((byte)(mRawData[1] & 0x7F));
+            byte s = BinaryCodedDecimals.BCDToByte((byte)(mRawData[0] & 0x7F));
+            mo = mo > 12 ? (byte)0 : mo;
+            d = d > 31 ? (byte)0 : d;
+            h = h > 23 ? (byte)0 : h;
+            mi = mi > 59 ? (byte)0 : mi;
+            s = s > 59 ? (byte)0 : s;
+            DateTime dt = new DateTime(y + 2000, mo, d, h, mi, s);
+            it_time.Group = "RTC";
+            it_time.Name = "ECU Zeit [UTC]";
+            it_time.ValueString = dt.ToString("dd.MM.yyyy HH:mm:ss");
+            Items.Add(it_time);
+            Pos = Pos + 6;
+
+            InternalDataItem it_RtcControl = new InternalDataItem();
+            it_RtcControl.Group = "RTC";
+            it_RtcControl.Name = "RtcControl";
+            it_RtcControl.ValueString = (mRawData[Pos]).ToString();
+            Items.Add(it_RtcControl);
+            Pos = Pos + 1;
+
+            InternalDataItem it_EcuStatus = new InternalDataItem();
+            it_EcuStatus.Group = "RTC";
+            it_EcuStatus.Name = "EcuStatus";
+            it_EcuStatus.ValueString = (mRawData[Pos]).ToString();
+            Items.Add(it_EcuStatus);
+            Pos = Pos + 1;
+
+            InternalDataItem it_LastThermRegeneration = new InternalDataItem();
+            it_LastThermRegeneration.Group = "RTC";
+            it_LastThermRegeneration.Name = "LastThermRegeneration";
+            it_LastThermRegeneration.ValueString = BitConverter.ToUInt32(mRawData, Pos).ToString();
+            Items.Add(it_LastThermRegeneration);
+            Pos = Pos + 4;
+
+            InternalDataItem it_FlashAqRingPos = new InternalDataItem();
+            it_FlashAqRingPos.Group = "RTC";
+            it_FlashAqRingPos.Name = "FlashAqRingPos";
+            it_FlashAqRingPos.ValueString = (mRawData[Pos]).ToString();
+            Items.Add(it_FlashAqRingPos);
+            Pos = Pos + 1;
+
+            InternalDataItem it_FlashAqStepPos = new InternalDataItem();
+            it_FlashAqStepPos.Group = "RTC";
+            it_FlashAqStepPos.Name = "FlashAqStepPos";
+            it_FlashAqStepPos.ValueString = BitConverter.ToUInt16(mRawData, Pos).ToString();
+            Items.Add(it_FlashAqStepPos);
+            Pos = Pos + 2;
+
+            InternalDataItem it_FlashErrRingSector = new InternalDataItem();
+            it_FlashErrRingSector.Group = "RTC";
+            it_FlashErrRingSector.Name = "FlashErrRingSector";
+            it_FlashErrRingSector.ValueString = (mRawData[16]).ToString();
+            Items.Add(it_FlashErrRingSector);
+            Pos = Pos + 1;
+
+            InternalDataItem it_FlashErrRingAddress = new InternalDataItem();
+            it_FlashErrRingAddress.Group = "RTC";
+            it_FlashErrRingAddress.Name = "FlashErrRingAddress";
+            it_FlashErrRingAddress.ValueString = BitConverter.ToUInt16(mRawData, Pos).ToString();
+            Items.Add(it_FlashErrRingAddress);
+            Pos = Pos + 2;
+
+            InternalDataItem it_IstKonzentration = new InternalDataItem();
+            it_IstKonzentration.Group = "RTC";
+            it_IstKonzentration.Name = "IstKonzentration";
+            it_IstKonzentration.ValueString = BitConverter.ToUInt32(mRawData, Pos).ToString();
+            Items.Add(it_IstKonzentration);
+            Pos = Pos + 4;
+
+            InternalDataItem it_Tankinhalt = new InternalDataItem();
+            it_Tankinhalt.Group = "RTC";
+            it_Tankinhalt.Name = "Tankinhalt";
+            if (mSoftwareRevision == 8)
+            {
+                it_Tankinhalt.ValueString = BitConverter.ToUInt16(mRawData, Pos).ToString();
+                Pos = Pos + 2;
+            }
+            else
+            {
+                it_Tankinhalt.ValueString = BitConverter.ToUInt32(mRawData, Pos).ToString();
+                Pos = Pos + 4;
+            }
+            Items.Add(it_Tankinhalt);
+
+            InternalDataItem it_Dosierimpulse = new InternalDataItem();
+            it_Dosierimpulse.Group = "RTC";
+            it_Dosierimpulse.Name = "Dosierimpulse";
+            it_Dosierimpulse.ValueString = BitConverter.ToUInt32(mRawData, Pos).ToString();
+            Items.Add(it_Dosierimpulse);
+            Pos = Pos + 4;
+
+            InternalDataItem it_PowerUpCounter = new InternalDataItem();
+            it_PowerUpCounter.Group = "RTC";
+            it_PowerUpCounter.Name = "PowerUpCounter";
+            it_PowerUpCounter.ValueString = BitConverter.ToUInt16(mRawData, Pos).ToString();
+            Items.Add(it_PowerUpCounter);
+            Pos = Pos + 2;
+
+            InternalDataItem it_BetriebsMinuten = new InternalDataItem();
+            it_BetriebsMinuten.Group = "RTC";
+            it_BetriebsMinuten.Name = "BetriebsMinuten";
+            it_BetriebsMinuten.ValueString = BitConverter.ToUInt32(mRawData, Pos).ToString();
+            Items.Add(it_BetriebsMinuten);
+            Pos = Pos + 4;
+
+            InternalDataItem it_DosierimpulseTank = new InternalDataItem();
+            it_DosierimpulseTank.Group = "RTC";
+            it_DosierimpulseTank.Name = "DosierimpulseTank";
+            it_DosierimpulseTank.ValueString = BitConverter.ToUInt32(mRawData, Pos).ToString();
+            Items.Add(it_DosierimpulseTank);
+            Pos = Pos + 4;
+
+            InternalDataItem it_DosierimpulseFilter = new InternalDataItem();
+            it_DosierimpulseFilter.Group = "RTC";
+            it_DosierimpulseFilter.Name = "DosierimpulseFilter";
+            it_DosierimpulseFilter.ValueString = BitConverter.ToUInt32(mRawData, Pos).ToString();
+            Items.Add(it_DosierimpulseFilter);
+            Pos = Pos + 4;
+
+            InternalDataItem it_Beladungssumme = new InternalDataItem();
+            it_Beladungssumme.Group = "RTC";
+            it_Beladungssumme.Name = "Beladungssumme";
+            it_Beladungssumme.ValueString = BitConverter.ToUInt32(mRawData, Pos).ToString();
+            Items.Add(it_Beladungssumme);
+            Pos = Pos + 4;
+
+            InternalDataItem it_PressureOffset = new InternalDataItem();
+            it_PressureOffset.Group = "RTC";
+            it_PressureOffset.Name = "PressureOffset";
+            it_PressureOffset.ValueString = (mRawData[Pos]).ToString();
+            Items.Add(it_PressureOffset);
+            Pos = Pos + 1;
+
+            InternalDataItem it_LastADOffset = new InternalDataItem();
+            it_LastADOffset.Group = "RTC";
+            it_LastADOffset.Name = "LastADOffset";
+            it_LastADOffset.ValueString = BitConverter.ToUInt16(mRawData, Pos).ToString();
+            Items.Add(it_LastADOffset);
+            Pos = Pos + 2;
+
+            InternalDataItem it_LoadNotCfgFlag = new InternalDataItem();
+            it_LoadNotCfgFlag.Group = "RTC";
+            it_LoadNotCfgFlag.Name = "LoadNotCfgFlag";
+            it_LoadNotCfgFlag.ValueString = (mRawData[Pos]).ToString();
+            Items.Add(it_LoadNotCfgFlag);
+            Pos = Pos + 1;
+
+            InternalDataItem it_SpiFlashDebug = new InternalDataItem();
+            it_SpiFlashDebug.Group = "RTC";
+            it_SpiFlashDebug.Name = "SpiFlashDebug";
+            it_SpiFlashDebug.ValueString = BitConverter.ToUInt16(mRawData, Pos).ToString();
+            Items.Add(it_SpiFlashDebug);
+            Pos = Pos + 2;
+
+            // free bytes
+
+            InternalDataItem it_Checksum = new InternalDataItem();
+            it_Checksum.Group = "RTC";
+            it_Checksum.Name = "Checksum";
+            it_Checksum.ValueString = String.Format("0x{0:X4}", BitConverter.ToUInt16(mRawData, Pos));
+            Items.Add(it_Checksum);
+            Pos = Pos + 2;
+        }
+
+        /// <summary>Export raw data to block</summary>
+        /// <returns>Block of raw data</returns>
+        public Block ToBlock()
+        {
+            if (mRawData != null)
+            {
+                Block ret = new Block();
+                ret.Type = Block.BlockId.IdRealTimeClock;
+
+                byte[] _raw = new byte[mRawData.Length + 6];
+                _raw[(int)Block.HeaderPosition.Type] = (byte)Block.BlockId.IdRealTimeClock;
+                _raw[(int)Block.HeaderPosition.Version] = 1;
+                _raw[(int)Block.HeaderPosition.SizeLowByte] = (byte)(mRawData.Length % 256);
+                _raw[(int)Block.HeaderPosition.SizeHighByte] = (byte)(mRawData.Length / 256);
+                for (int i = 6; i < _raw.Length; i++)
+                {
+                    _raw[i] = mRawData[i - 6];
+                }
+
+                ret.ReadRaw(ref _raw, false);
+                ret.GenerateChecksum();
+
+                return ret;
+            }
+            else
+            {
+                return null;
+            }
+        }
+    }
+}

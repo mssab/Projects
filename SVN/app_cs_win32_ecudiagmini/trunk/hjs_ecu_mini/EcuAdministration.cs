@@ -1,0 +1,1335 @@
+/*
+ * Object: hjs_ecu_mini.EcuAdministration
+ * Description: HJS-ECU admisistartion interface
+ * 
+ * $LastChangedDate: 2013-10-25 14:40:14 +0200 (Fr, 25 Okt 2013) $
+ * $LastChangedRevision: 25 $
+ * $LastChangedBy: ksi $
+ * $HeadURL: http://menden22/svn/devel/electronic/app_cs_win32_ecudiagmini/trunk/hjs_ecu_mini/EcuAdministration.cs $
+ * 
+ * LastReviewDate: 
+ * LastReviewRevision: 
+ * LastReviewBy: 
+ */
+using System;
+using System.IO;
+using HJS.ECU.Diag;
+
+namespace hjs_ecu_mini
+{
+    /// <summary>
+    /// Administartion object for ECU
+    /// </summary>
+    public class EcuAdministration
+    {
+        private Diagnostics mECU;
+
+        private bool mLocalTime;
+
+        private string mRawFileName;
+
+        /// <summary>
+        /// Accessors to raw file name w/o extension
+        /// </summary>
+        public string RawFileName
+        {
+            get
+            {
+                return mRawFileName;
+            }
+            set
+            {
+                mRawFileName = value;
+            }
+        }
+
+        /// <summary>Accessors to protocol version (read only)</summary>
+        public byte ProtocolVersion
+        {
+            get
+            {
+                if (mECU == null) return 0;
+                else return mECU.ProtocolVersion;
+            }
+        }
+
+        /// <summary>
+        /// Construtor
+        /// </summary>
+        public EcuAdministration()
+        {
+            mECU = new Diagnostics("COM1",
+                BitConverter.GetBytes(Properties.Settings.Default.Key),
+                HJS.ECU.Protocol.ProtocolBase.LanguageId.German);
+            mLocalTime = false;
+        }
+
+        /// <summary>
+        /// Start connection to ECU
+        /// </summary>
+        /// <param name="portName">Name of port (starting with COM)</param>
+        /// <param name="Language">Language enumerator</param>
+        /// <param name="LocalTime">Flag if time displayed local (or UTC)</param>
+        /// <returns>True if connection is established</returns>
+        public bool Connect(string portName, byte Language, bool LocalTime)
+        {
+            mLocalTime = LocalTime;
+            mECU.PortName = portName;
+            mECU.Language = (HJS.ECU.Protocol.ProtocolBase.LanguageId)Language;
+            mECU.ChangeServerIdentifier((HJS.ECU.Port.Comm.ServerByte)Properties.Settings.Default.ServerId);
+            bool ret = mECU.Connect(HJS.ECU.Port.Comm.PortType.Direct, LocalTime);
+            if (ret)
+            {
+                tellStatus(String.Format("Connected on {0} (V{1})", portName, mECU.ProtocolVersion));
+                //mRawFileName = String.Format("{0}_{1}", mECU.SerialNumber, DateTime.Now.ToShortDateString());
+                mRawFileName = String.Format("{0}_{1}", mECU.SerialNumber, DateTime.Now.ToString("yyyy-MM-dd"));
+            }
+            else
+            {
+                tellStatus(String.Format("Could not connect on {0} ({1})", portName, mECU.LastReturnValue));
+                mRawFileName = "";
+            }
+            return ret;
+        }
+
+        /// <summary>
+        /// Apply changes settings
+        /// </summary>
+        public void ApplySettings()
+        {
+            mECU.ChangeServerIdentifier((HJS.ECU.Port.Comm.ServerByte)Properties.Settings.Default.ServerId);
+        }
+
+        /// <summary>
+        /// Disconnect ECU
+        /// </summary>
+        /// <returns></returns>
+        public void Disconnect()
+        {
+            mECU.Disconnect();
+            mRawFileName = "";
+        }
+
+        /// <summary>
+        /// Delegated function to report progress to GUI
+        /// </summary>
+        /// <param name="percentage">Progress</param>
+        /// <returns>Always returns true</returns>
+        public delegate bool ProgressDelegateType(int percentage);
+
+        private ProgressDelegateType mProgressDelegate;
+
+        /// <summary>
+        /// Accessors to delegated report of process
+        /// </summary>
+        public ProgressDelegateType ProgressDelegate
+        {
+            get { return mProgressDelegate; }
+            set { mProgressDelegate = value; }
+        }
+
+        private void tellProgress(int percentage)
+        {
+            if (ProgressDelegate == null)
+                return;
+            ProgressDelegate(percentage);
+        }
+
+        /// <summary>
+        /// Delegated function to report status to GUI
+        /// </summary>
+        /// <param name="message">Status message</param>
+        /// <returns>Always returns true</returns>
+        public delegate bool StatusDelegateType(string message);
+
+        private StatusDelegateType mStatusDelegate;
+
+        /// <summary>
+        /// Accessors to delegated report of status
+        /// </summary>
+        public StatusDelegateType StatusDelegate
+        {
+            get { return mStatusDelegate; }
+            set { mStatusDelegate = value; }
+        }
+
+        private void tellStatus(string message)
+        {
+            if (StatusDelegate == null)
+                return;
+            StatusDelegate(message);
+        }
+
+        /// <summary>
+        /// Get date time object of last communication time stamp
+        /// </summary>
+        /// <returns>Date time object of last communication time stamp</returns>
+        public String GetLastTimeStamp()
+        {
+            if (mLocalTime)
+            {
+                return mECU.GetLastTimeStamp().ToLocalTime().ToString("dd.MM.yyyy HH:mm");
+            }
+            else
+            {
+                return mECU.GetLastTimeStamp().ToUniversalTime().ToString("dd.MM.yyyy HH:mm UTC");
+            }
+        }
+
+        /// <summary>
+        /// Set ecu time
+        /// </summary>
+        /// <param name="NewTime">Date time object of new ecu time</param>
+        /// <returns>True in success</returns>
+        public bool SetTime(DateTime NewTime)
+        {
+            if (!mECU.SetTime(NewTime))
+            {
+                tellStatus(String.Format("Could not set time ({0})", mECU.LastReturnValue));
+                return false;
+            }
+            else
+            {
+                tellStatus(String.Format("Time Set to {0} UTC", NewTime.ToString("dd.MM.yyyy HH:mm")));
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Get version string from ECU
+        /// </summary>
+        /// <returns></returns>
+        public string GetVersionsString()
+        {
+            string ret = String.Format("{0}\r\nProduktionsdatum: {1}\r\n{2}",
+                mECU.EcuVersions(), mECU.ProductionDate, mECU.InternalDescr);
+            return ret;
+        }
+
+        /// <summary>
+        /// Get info text from ECU
+        /// </summary>
+        /// <returns></returns>
+        public string GetInfoText()
+        {
+            return mECU.GetInfoText();
+        }
+
+        /// <summary>
+        /// Get number of values from ECU
+        /// </summary>
+        /// <returns>Number of values that can be read from ECU</returns>
+        public byte GetNumberOfValues()
+        {
+            return mECU.GetActualValueNumber();
+        }
+
+        /// <summary>
+        /// Get strings of one value from ECU
+        /// </summary>
+        /// <param name="rowNum">Position of value, or row number</param>
+        /// <param name="ValueName">String of value name</param>
+        /// <param name="FormattedValue">String of formatted value</param>
+        /// <param name="ValueUnit">String of value unit</param>
+        public void GetValueRow(byte rowNum, out string ValueName, out string FormattedValue, out string ValueUnit)
+        {
+            ValueName = mECU.GetActualValueName(rowNum);
+            FormattedValue = mECU.GetActualValueString(rowNum);
+            ValueUnit = mECU.GetActualValueUnit(rowNum);
+        }
+
+        /// <summary>
+        /// Read actual values from ECU
+        /// </summary>
+        /// <returns></returns>
+        public bool ReadActualValues()
+        {
+            if (!mECU.ReadActualValues())
+            {
+                tellStatus(String.Format("Could not read values ({0})", mECU.LastReturnValue));
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Get hidden flag of one value
+        /// </summary>
+        /// <param name="Position">Position or row number of required value</param>
+        /// <returns>True if value is hidden</returns>
+        public bool IsValueHidden(byte Position)
+        {
+            return mECU.GetActualValueHidden(Position);
+        }
+
+        /// <summary>
+        /// Get display flag of one value
+        /// </summary>
+        /// <param name="Position">Position or row number of required value</param>
+        /// <returns>True if value is displayed</returns>
+        public bool IsValueDisplayed(byte Position)
+        {
+            return mECU.GetActualValueDisplayed(Position);
+        }
+
+        /// <summary>
+        /// Export actual values to a XML file
+        /// </summary>
+        /// <param name="Filename">Target file name</param>
+        /// <param name="mFileExtensionIndex">Extension identifier</param>
+        public void ActualValuesSaveFile(string Filename, int mFileExtensionIndex)
+        {
+            if (!mECU.ReadActualValues())
+            {
+                tellStatus(String.Format("Could not read values ({0})", mECU.LastReturnValue));
+            }
+            else
+            {
+                //mECU.ActualValuesXmlExport(Filename);
+                // speichern
+                switch (mFileExtensionIndex)
+                {
+                    case 2:/*csv*/
+                        mECU.ActualValuesCsvExport(Filename);
+                        tellStatus("Istwerte (CSV) gespeichert.");
+                        break;
+                    case 1:/*xml*/
+                        mECU.ActualValuesXmlExport(Filename);
+                        tellStatus("Istwerte (XML) gespeichert.");
+                        break;
+                    case 0:
+                    default:
+                        //
+                        tellStatus("Istwerte nicht gespeichert! Unbekannter Dateityp!");
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Toggle Alternative unit and original unit
+        /// </summary>
+        /// <param name="NoAltUnit">True to use original unit, false for alternative unit (if available)</param>
+        public void ActualValuesToggleUnit(bool NoAltUnit)
+        {
+            mECU.ActualValuesToggleUnit(NoAltUnit);
+        }
+
+        /// <summary>
+        /// Read error stack from ECU
+        /// </summary>
+        public bool ReadErrorStack()
+        {
+            mECU.ErrStack();
+            return true;
+        }
+
+        /// <summary>
+        /// Clear error stack
+        /// </summary>
+        /// <returns>True on success</returns>
+        public bool ClearErrorStack()
+        {
+            if (!mECU.ResetErrorStack())
+            {
+                tellStatus(String.Format("Could not delete error stack ({0})", mECU.LastReturnValue));
+                return false;
+            }
+            else
+            {
+                tellStatus("Error stack cleared");
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Get strings of one error / event from ECU
+        /// </summary>
+        /// <param name="rowNum">Position of error, or row number</param>
+        /// <param name="ErrorName">Name of error</param>
+        /// <param name="Event">String that indicates error or event</param>
+        /// <param name="ErrorState">State of error</param>
+        /// <param name="FirstA">String of first accurance</param>
+        /// <param name="LastA">String of last accurance</param>
+        /// <param name="UntilA">String ofaccuranced until</param>
+        /// <param name="Anzahl">Number of Accurances</param>
+        public void GetErrorRow(ushort rowNum, out string ErrorName, out string Event, out string ErrorState,
+            out string FirstA, out string LastA, out string UntilA, out string Anzahl)
+        {
+            ErrorName = mECU.GetErrorName(rowNum);
+            ErrorState = mECU.GetErrorState(rowNum);
+            Event = mECU.IsErrorOrEvent(rowNum)?"":"Fehler";
+            if (mECU.GetErrorFirstAppear(rowNum) == mECU.ProductionDate)
+            {
+                FirstA = "-";   // date = 0
+            }
+            else
+            {
+                if (mLocalTime)
+                {
+                    FirstA = mECU.GetErrorFirstAppear(rowNum).ToLocalTime().ToString("dd.MM.yyyy HH:mm");
+                }
+                else
+                {
+                    FirstA = mECU.GetErrorFirstAppear(rowNum).ToUniversalTime().ToString("dd.MM.yyyy HH:mm UTC");
+                }
+            }
+            if (mECU.GetErrorLastAppear(rowNum) == mECU.ProductionDate)
+            {
+                LastA = "-";   // date = 0
+            }
+            else
+            {
+                if (mLocalTime)
+                {
+                    LastA = mECU.GetErrorLastAppear(rowNum).ToLocalTime().ToString("dd.MM.yyyy HH:mm");
+                }
+                else
+                {
+                    LastA = mECU.GetErrorLastAppear(rowNum).ToUniversalTime().ToString("dd.MM.yyyy HH:mm UTC");
+                }
+            }
+            if (mECU.GetErrorAppearedUntil(rowNum) == mECU.ProductionDate)
+            {
+                UntilA = "-";   // date = 0
+            }
+            else
+            {
+                if (mLocalTime)
+                {
+                    UntilA = mECU.GetErrorAppearedUntil(rowNum).ToLocalTime().ToString("dd.MM.yyyy HH:mm");
+                }
+                else
+                {
+                    UntilA = mECU.GetErrorAppearedUntil(rowNum).ToUniversalTime().ToString("dd.MM.yyyy HH:mm UTC");
+                }
+            }
+            Anzahl = mECU.GetNumberOfAppearances(rowNum).ToString();
+        }
+
+        /// <summary>
+        /// Get strings of one behave
+        /// </summary>
+        /// <param name="Position">Position of behave</param>
+        /// <param name="Name">Name of behave</param>
+        /// <param name="State">State of behave</param>
+        public void GetBehaveRow(byte Position, out string Name, out string State)
+        {
+            Name = mECU.GetBehaveName(Position);
+            State = mECU.GetBehaveState(Position);
+        }
+
+        /// <summary>
+        /// Check if error is occured
+        /// </summary>
+        /// <param name="ErrorNo">Identifier of error (error number)</param>
+        /// <returns>True if error is occured at least once</returns>
+        public bool IsErrorOccured(byte ErrorNo)
+        {
+            return mECU.IsErrorOccured(ErrorNo);
+        }
+
+        /// <summary>
+        /// Export error stack and behaves to a XML file
+        /// </summary>
+        /// <param name="Filename">Target file name</param>
+        /// <param name="mFileExtensionIndex">Extension identifier</param>
+        public void ErrorBehaveSaveFile(string Filename, int mFileExtensionIndex)
+        {
+            mECU.ErrStack();
+            switch (mFileExtensionIndex)
+            {
+                case 2:/*csv*/
+                    mECU.ErrorBehaveCsvExport(Filename);
+                    tellStatus("Fehlerstack (CSV) gespeichert.");
+                    break;
+                case 1:/*xml*/
+                    try
+                    {
+                        mECU.ErrorBehaveXmlExport(Filename);
+                        tellStatus("Fehlerstack (XML) gespeichert.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Exception during opening XML file: {0}", ex.Message);
+                        tellStatus("Fehlerstack (XML) konnte nicht gespeichert werden!");
+                    }
+                    break;
+                case 0:
+                default:
+                    //
+                    tellStatus("Fehlerstack nicht gespeichert! Unbekannter Dateityp!");
+                    break;
+            }
+        }
+
+        private string mAcquiFileName;
+
+        /// <summary>
+        /// Start reading complete acquisition from ECU
+        /// </summary>
+        /// <param name="FileName">File name of acquisition file</param>
+        /// <param name="FileExtensionIndex">Extension identifier</param>
+        public void ReadAcquisition(string FileName, int FileExtensionIndex)
+        {
+            mAcquiFileName = FileName;
+            mFileExtensionIndex = FileExtensionIndex;
+            System.Threading.Thread AcquiThread = new System.Threading.Thread(bgWork_Acqui_DoWork);
+            tellProgress(0);
+            AcquiThread.Start();
+        }
+
+        private void bgWork_Acqui_DoWork()
+        {
+            if (mECU.AcquiItems() > 0)
+            {
+                //nachfragen ob daten erneut laden, oder gelesene daten erneut speichern
+                mECU.AcquiDeleteItems();
+            }
+            byte BlockAnzahl = mECU.Acqui();
+            for (byte i = 0; i < BlockAnzahl; i++)
+            {
+                tellStatus(String.Format("Auslesen Akquisition {0}/{1}",i, BlockAnzahl));
+                mECU.AcquiStep(i);
+                tellProgress(((i + 1) * 100) / BlockAnzahl);
+                if (mECU.LastReturnValue == HJS.ReturnValue.TimeOut)
+                {
+                    // Break for loop
+                    i = BlockAnzahl;
+                }
+            }
+            if (mECU.LastReturnValue == HJS.ReturnValue.TimeOut)
+            {
+                tellStatus("Akquisition nicht gespeichert! Verbindung unterbrochen!");
+            }
+            else
+            {
+                // speichern
+                switch (mFileExtensionIndex)
+                {
+                    case 2:/*csv*/
+                        mECU.AcquiCsvExport(mAcquiFileName);
+                        tellStatus("Akquisition (CSV) gespeichert.");
+                        break;
+                    case 1:/*xml*/
+                        try
+                        {
+                            mECU.AcquiXmlExport(mAcquiFileName);
+                            tellStatus("Akquisition (XML) gespeichert.");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Exception during opening XML file: {0}", ex.Message);
+                            tellStatus("Akquisition (XML) konnte nicht gespeichert werden!");
+                        }
+                        break;
+                    case 0:
+                    default:
+                        //
+                        tellStatus("Akquisition nicht gespeichert! Unbekannter Dateityp!");
+                        break;
+                }
+            }
+        }
+
+        private ushort LastCrcLng1;
+
+        private ushort LastCrcLng2;
+
+        private ushort LastCrcLng3;
+
+        private ushort LastCrcLng4;
+
+        private string CurrentConfigVersion;
+
+        /// <summary>
+        /// Start uploading configuration file(s) to ecu
+        /// </summary>
+        /// <returns>True if file upload thread is started successfully</returns>
+        public bool UploadConfig(string FileName)
+        {
+            HJS.BlockFile _file = new HJS.BlockFile();
+            HJS.ReturnValue ret = _file.Open(HJS.BlockFile.FileIdentifier.ParameterSet, FileName);
+            if (ret == HJS.ReturnValue.NoError)
+            {
+                HJS.Block _cfg;
+                HJS.Block _kf;
+                HJS.Block _lng1;
+                HJS.Block _lng2;
+                HJS.Block _lng3;
+                HJS.Block _lng4;
+                HJS.Block _lng5 = null;
+                HJS.Block _lng6 = null;
+                HJS.Block _lng7 = null;
+                HJS.Block _lng8 = null;
+                ret = _file.GetBlock(out _cfg, HJS.Block.BlockId.IdKonfig, false);
+                if (ret == HJS.ReturnValue.NoError)
+                {
+                    CurrentConfigVersion = _cfg.GetCfgVersion();
+                    if (mECU.GetCompatibility() != _cfg.Version)
+                    {
+                        // Config does not match software on ecu
+                        tellStatus(String.Format("Konfiguration nicht kompatibel zu Software ({0} benötigt!)", mECU.GetCompatibility()));
+                        return false;
+                    }
+                    else
+                    {
+                        ret = _file.GetBlock(out _kf, HJS.Block.BlockId.IdKennfld, false);
+                    }
+                    if (ret == HJS.ReturnValue.NoError)
+                    {
+                        ret = _file.GetBlock(out _lng1, HJS.Block.BlockId.IdLngDE, false);
+                        if (ret == HJS.ReturnValue.NoError)
+                        {
+                            LastCrcLng1 = _lng1.Checksum;
+                            ret = _file.GetBlock(out _lng2, HJS.Block.BlockId.IdLngEN, false);
+                            if (ret == HJS.ReturnValue.NoError)
+                            {
+                                LastCrcLng2 = _lng2.Checksum;
+                                ret = _file.GetBlock(out _lng3, HJS.Block.BlockId.IdLngFR, false);
+                                if (ret == HJS.ReturnValue.NoError)
+                                {
+                                    LastCrcLng3 = _lng3.Checksum;
+                                    ret = _file.GetBlock(out _lng4, HJS.Block.BlockId.IdLngIT, false);
+                                    if (ret == HJS.ReturnValue.NoError)
+                                    {
+                                        LastCrcLng4 = _lng4.Checksum;
+                                        // Optional languages
+                                        for (int i = 34; i < 50; i++)
+                                        {
+                                           //
+                                            if (_lng5 == null)
+                                            {
+                                                ret = _file.GetBlock(out _lng5, (HJS.Block.BlockId) i, false);
+                                                if (ret != HJS.ReturnValue.NoError)
+                                                    _lng5 = null;
+
+                                            }
+                                            else if (_lng6 == null)
+                                            {
+                                                ret = _file.GetBlock(out _lng6, (HJS.Block.BlockId)i, false);
+                                                if (ret != HJS.ReturnValue.NoError)
+                                                    _lng6 = null;
+
+                                            }
+                                            else if (_lng7 == null)
+                                            {
+                                                ret = _file.GetBlock(out _lng7, (HJS.Block.BlockId)i, false);
+                                                if (ret != HJS.ReturnValue.NoError)
+                                                    _lng7 = null;
+
+                                            }
+                                            else if (_lng8 == null)
+                                            {
+                                                ret = _file.GetBlock(out _lng8, (HJS.Block.BlockId)i, false);
+                                                if (ret != HJS.ReturnValue.NoError)
+                                                    _lng8 = null;
+
+                                            }
+                                            else
+                                            {
+                                                break;
+                                            }
+
+                                        }
+
+                                        ret = mECU.StartUpdateParameterset(ref _cfg, ref _kf, ref _lng1, ref _lng2, ref _lng3, ref _lng4, ref _lng5, ref _lng6, ref _lng7, ref _lng8);
+                                        //upload still in progress !
+                                        _file.Close();
+                                        if (ret == HJS.ReturnValue.NoError)
+                                        {
+                                            return true;
+                                        }
+                                        else
+                                        {
+                                            tellStatus(String.Format("Aufspielen fehlgeschlagen ({0})", ret));
+                                            return false;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                _file.Close();
+                tellStatus(String.Format("Defekte Datei: {0}", FileName));
+                return false;
+            }
+            else
+            {
+                // je nach ret val LastErrorString setzen!
+                tellStatus(String.Format("Datei konnte nicht geoeffnet werden: {0}", FileName));
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Check if parameterset is uploaded successfully
+        /// </summary>
+        /// <returns>True if upload was successfully</returns>
+        public bool CheckConfig()
+        {
+            bool ret = true;
+            if (mECU.ConfigVersion != CurrentConfigVersion)
+            {
+                tellStatus("Aufspielen fehlgeschlagen (Versionsvergleich)!");
+                ret = false;
+            }
+            else
+            {
+                // kf?
+                ret = mECU.CheckLanguage(HJS.Block.BlockId.IdLngDE, LastCrcLng1);
+                if (ret)
+                {
+                    ret = mECU.CheckLanguage(HJS.Block.BlockId.IdLngEN, LastCrcLng2);
+                    if (ret)
+                    {
+                        ret = mECU.CheckLanguage(HJS.Block.BlockId.IdLngFR, LastCrcLng3);
+                        if (ret)
+                        {
+                            ret = mECU.CheckLanguage(HJS.Block.BlockId.IdLngIT, LastCrcLng4);
+                            if (ret)
+                            {
+                            }
+                            else
+                            {
+                                tellStatus("Sprachen (it) konnte nicht aufgespielt werden!");
+                            }
+                        }
+                        else
+                        {
+                            tellStatus("Sprachen (fr) konnte nicht aufgespielt werden!");
+                        }
+                    }
+                    else
+                    {
+                        tellStatus("Sprachen (en) konnte nicht aufgespielt werden!");
+                    }
+                }
+                else
+                {
+                    tellStatus("Sprachen (de) konnte nicht aufgespielt werden!");
+                }
+            }
+            tellStatus("Aufspielen erfolgreich");
+            return ret;
+        }
+
+        /// <summary>
+        /// Set Production data (SN, date, temperature)
+        /// </summary>
+        /// <param name="serialNumber">New serialnumber</param>
+        /// <param name="temperature">New temperature</param>
+        /// <returns>True in success</returns>
+        public bool SetProductionData(UInt32 serialNumber, Int16 temperature)
+        {
+            if (!mECU.SetProductionData(serialNumber, temperature))
+            {
+                tellStatus(String.Format("Could not set production data ({0})", mECU.LastReturnValue));
+                return false;
+            }
+            else
+            {
+                tellStatus(String.Format("Production data set (S/N:{0})", serialNumber));
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Master reset ECU
+        /// </summary>
+        /// <returns>True on success</returns>
+        public bool MasterReset()
+        {
+            if (!mECU.MasterReset())
+            {
+                tellStatus(String.Format("Could not execute master reset ({0})", mECU.LastReturnValue));
+                return false;
+            }
+            else
+            {
+                tellStatus("Master reset executed");
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Reboot into normal mode
+        /// </summary>
+        /// <param name="BootMode">Parameter for rebooting</param>
+        /// <returns>True on success</returns>
+        public bool Reboot(HJS.ECU.Protocol.ProtocolBase.RebootMode BootMode)
+        {
+            if (!mECU.Reboot(BootMode))
+            {
+                tellStatus(String.Format("Could not reboot ECu ({0})", mECU.LastReturnValue));
+                return false;
+            }
+            else
+            {
+                tellStatus("ECU rebooted");
+                return true;
+            }
+        }
+
+        private string mErrorRingFileName;
+        private int mFileExtensionIndex;
+
+        /// <summary>
+        /// Start reading complete error ring from ECU
+        /// </summary>
+        /// <param name="FileName">File name of error ring file</param>
+        /// <param name="FileExtensionIndex">Extension identifier</param>
+        public void ReadErrorRing(string FileName, int FileExtensionIndex)
+        {
+            mErrorRingFileName = FileName;
+            mFileExtensionIndex = FileExtensionIndex;
+            System.Threading.Thread ErrRingThread = new System.Threading.Thread(bgWork_ErrRing_DoWork);
+            tellProgress(0);
+            ErrRingThread.Start();
+        }
+
+        private void bgWork_ErrRing_DoWork()
+        {
+            if (mECU.ErrRingItems() > 0)
+            {
+                //nachfragen ob daten erneut laden, oder gelesene daten erneut speichern
+                mECU.ErrRingDeleteItems();
+            }
+            byte BlockAnzahl = mECU.GetErrorRingBlockNumber();
+            for (byte i = 0; i < BlockAnzahl; i++)
+            {
+                tellStatus(String.Format("Auslesen Fehlerring {0}/{1}", i, BlockAnzahl));
+                mECU.ErrRingStep(i);
+                tellProgress(((i + 1) * 100) / BlockAnzahl);
+                if (mECU.LastReturnValue == HJS.ReturnValue.TimeOut)
+                {
+                    // Break for loop
+                    i = BlockAnzahl;
+                }
+            }
+            if (mECU.LastReturnValue == HJS.ReturnValue.TimeOut)
+            {
+                tellStatus("Fehlerring nicht gespeichert! Verbindung unterbrochen!");
+            }
+            else
+            {
+                // speichern
+                switch (mFileExtensionIndex)
+                {
+                    case 2:/*csv*/
+                        mECU.ErrorRingCsvExport(mErrorRingFileName);
+                        tellStatus("Fehlerring (CSV) gespeichert.");
+                        break;
+                    case 1:/*xml*/
+                        try
+                        {
+                            mECU.ErrorRingXmlExport(mErrorRingFileName);
+                            tellStatus("Fehlerring (XML) gespeichert.");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Exception during opening XML file: {0}", ex.Message);
+                            tellStatus("Fehlerring (XML) konnte nicht gespeichert werden!");
+                        }
+                            break;
+                    case 0:
+                    default:
+                        //
+                        tellStatus("Fehlerring nicht gespeichert! Unbekannter Dateityp!");
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Read rtc data
+        /// </summary>
+        /// <returns>True on success</returns>
+        public bool ReadRtc()
+        {
+            if (!mECU.ReadRtc())
+            {
+                tellStatus(String.Format("Could read RTC data ({0})", mECU.LastReturnValue));
+                return false;
+            }
+            else
+            {
+                tellStatus("RTC read");
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Get number of volatiles values
+        /// </summary>
+        /// <returns>Number of volatiles values</returns>
+        public UInt16 GetNumberOfVolatiles()
+        {
+            return mECU.GetNumberOfVolatiles();
+        }
+
+        /// <summary>
+        /// Get volatile value as string
+        /// </summary>
+        /// <param name="Position">Position of volatile value</param>
+        /// <returns>Volatile value as string</returns>
+        public string GetVolatileValue(UInt16 Position)
+        {
+            return mECU.GetVolatileValue(Position);
+        }
+
+        /// <summary>
+        /// Read empirical data
+        /// </summary>
+        /// <returns>True on success</returns>
+        public bool ReadEmpiricals()
+        {
+            if (!mECU.ReadEmpiricals())
+            {
+                tellStatus(String.Format("Could read Empiricals ({0})", mECU.LastReturnValue));
+                return false;
+            }
+            else
+            {
+                tellStatus("Empiricals read");
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Get empirical group names
+        /// </summary>
+        /// <param name="GroupNames">Position of group</param>
+        /// <returns>True on success</returns>
+        public bool GetEmpiricalGroupNames(out string[] GroupNames)
+        {
+            return mECU.GetEmpiricalGroupNames(out GroupNames);
+        }
+
+        /// <summary>
+        /// Get number of empirical values
+        /// </summary>
+        /// <param name="Group">Position of group</param>
+        /// <returns>Number of values</returns>
+        public UInt16 GetNumberOfEmpiricalValues(UInt16 Group)
+        {
+            return mECU.GetNumberOfEmpiricalValues(Group);
+        }
+
+        /// <summary>
+        /// Get empirical value string
+        /// </summary>
+        /// <param name="GroupPosition">Position of group</param>
+        /// <param name="ValuePosition">Position of value</param>
+        /// <returns>String with name and value</returns>
+        public string GetEmpiricalValue(UInt16 GroupPosition, UInt16 ValuePosition)
+        {
+            return mECU.GetEmpiricalValue(GroupPosition, ValuePosition);
+        }
+
+        /// <summary>
+        /// Export empirical values to a XML file
+        /// </summary>
+        /// <param name="Filename">Target file name</param>
+        /// <param name="mFileExtensionIndex">Extension identifier</param>
+        public void EmpiricalSaveFile(string Filename, int mFileExtensionIndex)
+        {
+            if (!mECU.ReadEmpiricals())
+            {
+                tellStatus(String.Format("Could not read empirical values ({0})", mECU.LastReturnValue));
+            }
+            else
+            {
+                if (!mECU.ReadRtc())
+                {
+                    tellStatus(String.Format("Could read RTC data ({0})", mECU.LastReturnValue));
+                }
+                else
+                {
+                    switch (mFileExtensionIndex)
+                    {
+                        case 2:/*csv*/
+                            mECU.EmpiricalCsvExport(Filename);
+                            tellStatus("Lernwerte/RTC (CSV) gespeichert.");
+                            break;
+                        case 1:/*xml*/
+                            try
+                            {
+                                mECU.EmpiricalXmlExport(Filename);
+                                tellStatus("Lernwerte/RTC (XML) gespeichert.");
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine("Exception during opening XML file: {0}", ex.Message);
+                                tellStatus("Lernwerte/RTC (XML) konnten nicht gespeichert werden!");
+                            }
+                            break;
+                        case 0:
+                        default:
+                            //
+                            tellStatus("Lernwerte/RTC nicht gespeichert! Unbekannter Dateityp!");
+                            break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Read DTC from ECU
+        /// </summary>
+        /// <returns>True on success</returns>
+        public bool ReadDtc()
+        {
+            if (!mECU.ReadDtc())
+            {
+                tellStatus(String.Format("Could read DTC data ({0})", mECU.LastReturnValue));
+                return false;
+            }
+            else
+            {
+                tellStatus("DTC read");
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Get DTC info text
+        /// </summary>
+        /// <returns></returns>
+        public string GetDtcInfo()
+        {
+            return mECU.DtcInfo;
+        }
+
+        /// <summary>
+        /// Get DTC freeze frame text
+        /// </summary>
+        /// <returns></returns>
+        public string GetDtcFF()
+        {
+            return mECU.DtcFF;
+        }
+
+        /// <summary>
+        /// Get DTC derating and flags text
+        /// </summary>
+        /// <returns></returns>
+        public string GetDtcDerateFlags()
+        {
+            return mECU.GetDtcDerateFlags;
+        }
+
+        /// <summary>
+        /// Get number of stack items
+        /// </summary>
+        /// <returns></returns>
+        public byte GetDtcItemCount()
+        {
+            return mECU.GetDtcItemCount();
+        }
+
+        /// <summary>
+        /// Get stack item strings
+        /// </summary>
+        /// <param name="Position">Position of stack item</param>
+        /// <param name="strFreeWarmUps">Free warm ups of stack item</param>
+        /// <param name="strErrorNumber">Error number of stack item</param>
+        /// <param name="strOccuranceCounter">Occurance counter of stack item</param>
+        /// <param name="strPending">Pending flag of stack item</param>
+        /// <param name="strActive">Active flag of stack item</param>
+        /// <param name="strPrevActive">Previously active flag of stack item</param>
+        /// <param name="strSPN">Suspect parameter number of stack item</param>
+        /// <param name="strFMI">Failure mode identifier of stack item</param>
+        /// <returns>True if stack item strings are set</returns>
+        public bool GetDtcItem(byte Position, out string strFreeWarmUps, out string strErrorNumber,
+            out string strOccuranceCounter, out string strPending, out string strActive,
+            out string strPrevActive, out string strSPN, out string strFMI)
+        {
+            return mECU.GetDtcItem(Position, out strFreeWarmUps, out strErrorNumber,
+            out  strOccuranceCounter, out  strPending, out  strActive, out  strPrevActive,
+            out strSPN, out strFMI);
+        }
+
+        /// <summary>
+        /// Send order to ecu
+        /// </summary>
+        /// <param name="OrderId">Order enumerator</param>
+        /// <param name="OrderValue">Value of order</param>
+        /// <returns>True on success</returns>
+        public bool SetOrder(Diagnostics.Orders OrderId, UInt16 OrderValue)
+        {
+            if (!mECU.Order(OrderId, OrderValue))
+            {
+                tellStatus(String.Format("Could execute order {0} ({1})", OrderId, mECU.LastReturnValue));
+                return false;
+            }
+            else
+            {
+                tellStatus(String.Format("Order {0} executed ({1})", OrderId, OrderValue));
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Send direct order to ECU
+        /// </summary>
+        /// <param name="OrderByte">Order byte</param>
+        /// <param name="Parameter">Parameter</param>
+        /// <returns>True on success</returns>
+        public bool DirectOrder(Byte OrderByte, UInt16 Parameter)
+        {
+            if (!mECU.DirectOrder(OrderByte, Parameter))
+            {
+                tellStatus(String.Format("Could not execute order {0}:{1} ({2})", OrderByte, Parameter, mECU.LastReturnValue));
+                return false;
+            }
+            else
+            {
+                tellStatus(String.Format("Order executed ({0}:{1})", OrderByte, Parameter));
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Save all files as XML files to certain path
+        /// </summary>
+        /// <param name="Path">Path to files to save</param>
+        public void SaveAllFiles(string Path)
+        {
+            if (!mECU.ReadActualValues())
+            {
+                tellStatus(String.Format("Could not read values ({0})", mECU.LastReturnValue));
+            }
+            else
+            {
+                mECU.ActualValuesXmlExport(String.Format("{0}\\{1}_actual.xml", Path, RawFileName));
+                tellStatus("Istwerte (XML) gespeichert.");
+            }
+
+            mECU.ErrStack();
+            mECU.ErrorBehaveXmlExport(String.Format("{0}\\{1}_err_stack.xml", Path, RawFileName));
+            tellStatus("Fehlerstack (XML) gespeichert.");
+
+            if (!mECU.ReadEmpiricals())
+            {
+                tellStatus(String.Format("Could not read empirical values ({0})", mECU.LastReturnValue));
+            }
+            else if (!mECU.ReadRtc())
+            {
+                tellStatus(String.Format("Could not read RTC values ({0})", mECU.LastReturnValue));
+            }
+            else
+            {
+                mECU.EmpiricalXmlExport(String.Format("{0}\\{1}_empirical.xml", Path, RawFileName));
+                tellStatus("Lernwerte/RTC (XML) gespeichert.");
+            }
+
+            ReadErrorRing(String.Format("{0}\\{1}_err_ring.xml", Path, RawFileName), 1);
+
+            //ReadAcquisition(String.Format("{0}\\{1}_acqi.xml", Path, RawFileName), 1);
+        }
+
+        /// <summary>Read a parameter set file from ECU</summary>
+        /// <param name="FileName">File name of parameterset</param>
+        /// <returns>True if file is uploaded successfully</returns>
+        public bool ReadConfig(string FileName)
+        {
+            HJS.BlockFile _file = new HJS.BlockFile();
+            HJS.Block _cfg = mECU.GetBlock(HJS.Block.BlockId.IdKonfig);
+            return false;
+        }
+
+        /// <summary>Upload a config file to ECU </summary>
+        /// <param name="FileName">File name of config</param>
+        /// <returns>True if file is uploaded successfully</returns>
+        public bool UploadCfgFile(string FileName)
+        {
+            if (File.Exists(FileName))
+            {
+                // load file into byte array
+                byte[] _buffer = new byte[0];
+                _buffer = File.ReadAllBytes(FileName);
+                if (_buffer.Length != 1536)
+                {
+                    tellStatus("Dateigroesse falsch: " + FileName);
+                    return false;
+                }
+                // save version number of file
+                string _fileVersion = String.Format("{0}.{1}.{2}",
+                    BitConverter.ToUInt16(_buffer, 9), _buffer[11], _buffer[12]);
+                // write to ecu
+                if (mECU.WriteConfig(_buffer))
+                {
+                    // reconnect
+                    mECU.Disconnect();
+                    System.Threading.Thread.Sleep(250);
+                    mECU.FastConnect(HJS.ECU.Port.Comm.PortType.Direct);
+                    // check version
+                    if (String.Compare(_fileVersion, mECU.ConfigVersion) == 0){
+                        tellStatus("Aufspielen erfolgreich");
+                        return true;
+                    }
+                    else
+                    {
+                        tellStatus("Aufspielen fehlgeschlagen Versionsvergleich");
+                        return false;
+                    }
+
+                }
+                else
+                {
+                    tellStatus("Aufspielen fehlgeschlagen " + mECU.GetLastReturnValue());
+                    return false;
+                }
+            }
+            else
+            {
+                tellStatus("Datei nicht gefunden: " + FileName);
+                return false;
+            }
+        }
+
+        /// <summary>Upload a data map file to ECU </summary>
+        /// <param name="FileName">File name of data map</param>
+        /// <returns>True if file is uploaded successfully</returns>
+        public bool UploadDatFile(string FileName)
+        {
+            if (File.Exists(FileName))
+            {
+                // load file into byte array
+                byte[] _buffer = new byte[0];
+                _buffer = File.ReadAllBytes(FileName);
+                if (_buffer.Length != 2048)
+                {
+                    tellStatus("Dateigroesse falsch: " + FileName);
+                    return false;
+                }
+                // save version number of file
+                string _fileVersion = String.Format("{0}.{1}.{2}",
+                    BitConverter.ToUInt16(_buffer, 225), _buffer[227], _buffer[228]);
+                // write to ecu
+                if (mECU.WriteDatamap(_buffer))
+                {
+                    // reconnect
+                    mECU.Disconnect();
+                    System.Threading.Thread.Sleep(250);
+                    mECU.FastConnect(HJS.ECU.Port.Comm.PortType.Direct);
+                    // check version
+                    if (String.Compare(_fileVersion, mECU.DatamapVersion) == 0)
+                    {
+                        tellStatus("Aufspielen erfolgreich");
+                        return true;
+                    }
+                    else
+                    {
+                        tellStatus("Aufspielen fehlgeschlagen Versionsvergleich");
+                        return false;
+                    }
+
+                }
+                else
+                {
+                    tellStatus("Aufspielen fehlgeschlagen " + mECU.GetLastReturnValue());
+                    return false;
+                }
+            }
+            else
+            {
+                tellStatus("Datei nicht gefunden: " + FileName);
+                return false;
+            }
+        }
+
+        /// <summary>Upload a language file to ECU </summary>
+        /// <param name="FileName">File name of language</param>
+        /// <returns>True if file is uploaded successfully</returns>
+        public bool UploadLngFile(string FileName)
+        {
+            UInt16[] _offset = new UInt16[4];
+            UInt16[] _size = new UInt16[4];
+            UInt16[] _CRC = new UInt16[4];
+            if (File.Exists(FileName))
+            {
+                // load file into byte array
+                byte[] _fileBuffer = new byte[0];
+                _fileBuffer = File.ReadAllBytes(FileName);
+                switch (_fileBuffer.Length)
+                {
+                    case 16410:
+                        // 4 languages
+                        break;
+                    case 8218:
+                        // 2 languages
+                        break;
+                    default:
+                        tellStatus("Dateigroesse falsch: " + FileName);
+                        return false;
+                }
+                _offset[0] = BitConverter.ToUInt16(_fileBuffer, 0);
+                _size[0] = BitConverter.ToUInt16(_fileBuffer, 2);
+                _CRC[0] = BitConverter.ToUInt16(_fileBuffer, 4);
+                _offset[1] = BitConverter.ToUInt16(_fileBuffer, 6);
+                _size[1] = BitConverter.ToUInt16(_fileBuffer, 8);
+                _CRC[1] = BitConverter.ToUInt16(_fileBuffer, 10);
+                _offset[2] = BitConverter.ToUInt16(_fileBuffer, 12);
+                _size[2] = BitConverter.ToUInt16(_fileBuffer, 14);
+                _CRC[2] = BitConverter.ToUInt16(_fileBuffer, 16);
+                _offset[3] = BitConverter.ToUInt16(_fileBuffer, 18);
+                _size[3] = BitConverter.ToUInt16(_fileBuffer, 20);
+                _CRC[3] = BitConverter.ToUInt16(_fileBuffer, 22);
+                // 24= version
+                // termination char
+                if (_fileBuffer[25] != 0x0A)
+                {
+                    tellStatus("Dateiformat falsch: " + FileName);
+                    return false;
+                }
+                for (int i = 0; i < 4; i++)
+                {
+                    if (_size[i] != 0)
+                    {
+                        byte[] _writeBuffer = new byte[4096];
+                        Array.Copy(_fileBuffer, _offset[i], _writeBuffer, 0, 4096);
+                        if (mECU.WriteLanguage(i, _writeBuffer))
+                        {
+                            // check crc
+                            HJS.Block.BlockId _lid = HJS.Block.BlockId.IdLngDE;
+                            switch (i)
+                            {
+                                case 0:
+                                    _lid = HJS.Block.BlockId.IdLngDE;
+                                    break;
+                                case 1:
+                                    _lid = HJS.Block.BlockId.IdLngEN;
+                                    break;
+                                case 2:
+                                    _lid = HJS.Block.BlockId.IdLngFR;
+                                    break;
+                                case 3:
+                                    _lid = HJS.Block.BlockId.IdLngIT;
+                                    break;
+                            }
+                            if(!mECU.CheckLanguage(_lid, _CRC[i])){
+                                tellStatus("Aufspielen fehlgeschlagen Checksumme");
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            tellStatus("Aufspielen fehlgeschlagen " + mECU.GetLastReturnValue());
+                            return false;
+                        }
+                    }
+                }
+                tellStatus("Aufspielen erfolgreich");
+                return true;
+            }
+            else
+            {
+                tellStatus("Datei nicht gefunden: " + FileName);
+                return false;
+            }
+        }
+    }
+}

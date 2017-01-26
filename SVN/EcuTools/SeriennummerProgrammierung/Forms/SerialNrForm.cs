@@ -1,0 +1,707 @@
+﻿/*
+ * Object: SeriennummerProgrammierung.Forms.SerialNrForm
+ * Description: Dialog for programming serial numbers
+ * 
+ * $LastChangedDate: 2015-03-12 16:55:48 +0100 (Do, 12 Mrz 2015) $
+ * $LastChangedRevision: 101 $
+ * $LastChangedBy: ksi $
+ * $HeadURL: http://menden22/svn/devel/electronic/app_cs_win32_ecudiagmini/branch/EcuTools/SeriennummerProgrammierung/Forms/SerialNrForm.cs $
+ * 
+ * LastReviewDate: 
+ * LastReviewRevision: 
+ * LastReviewBy: 
+ */
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Windows.Forms;
+
+namespace SeriennummerProgrammierung.Forms
+{
+    /// <summary>Dialog for programming serial numbers</summary>
+    public partial class SerialNrForm : Form
+    {
+        private byte[] mKey;
+        private byte[] mKeyTester = { 0, 0, 0, 0, 0, 0, 0, 0 };
+        private System.Timers.Timer mClockUpdater;
+        private string sFehlerDatei = "";
+
+        /// <summary>Default constructor</summary>
+        public SerialNrForm()
+        {
+            InitializeComponent();
+
+            int testerPort = -1;
+            int ecuPort = -1;
+            int i = 0;
+
+            mKey = new byte[8];
+            mKey[0] = 0x50; mKey[1] = 0x72; mKey[2] = 0x67; mKey[3] = 0x50;
+            mKey[4] = 0x6C; mKey[5] = 0x7A; mKey[6] = 0x79; mKey[7] = 0x22;
+
+            dateTimePicker1.Enabled = false;
+            textBoxLogFile.Enabled = false;
+            textBoxLogFile.Text = Properties.Settings.Default.LogPath;
+            //getrennte Fehlerdatei "fehlerDatei.csv" wird im LogPath positioniert... 
+            int iPos = textBoxLogFile.Text.Trim().LastIndexOf("\\");
+            if (iPos > 0) { sFehlerDatei = textBoxLogFile.Text.Trim().Substring(0, iPos) + "\\fehlerDatei.csv"; }
+            else { sFehlerDatei = "C:\\temp\\fehlerDatei.csv"; }
+            //eine LogDatei - Fehler werden in die vorhandene csv-Datei gespeichert
+            //sFehlerDatei = textBoxLogFile.Text.Trim();
+            //
+            List<String> portNames = new List<string>();
+            comboBoxTesterPort.Items.Clear();
+            foreach (string s in System.IO.Ports.SerialPort.GetPortNames())
+            {
+                portNames.Add(s);
+                if (s == Properties.Settings.Default.TesterPort)
+                {
+                    testerPort = i;
+                }
+                if (s == Properties.Settings.Default.EcuPort)
+                {
+                    ecuPort = i;
+                }
+                i++;
+            }
+            comboBoxTesterPort.Items.AddRange(portNames.ToArray());
+            if (testerPort >= 0) comboBoxTesterPort.SelectedIndex = testerPort;
+            comboBoxEcuPort.Items.AddRange(portNames.ToArray());
+            if (ecuPort >= 0) comboBoxEcuPort.SelectedIndex = ecuPort;
+            labelStatus.Text = "Bereit";
+            labelTQnumber.Text = string.Empty;
+
+            mClockUpdater = new System.Timers.Timer(1000);
+            mClockUpdater.Elapsed += mClockUpdater_Elapsed;
+            mClockUpdater.Start();
+
+            string[] ver = Application.ProductVersion.Split('.');
+            labelVersion.Text = String.Format("V{0}.{1}.{2}"
+                , ver[0], ver[1], ver[2]);
+        }
+
+        void mClockUpdater_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            mClockUpdater.Stop();
+            if (dateTimePicker1.InvokeRequired)
+            {
+                dateTimePicker1.BeginInvoke((MethodInvoker)delegate() { dateTimePicker1.Value = DateTime.Now; });
+            }
+            else
+            {
+                dateTimePicker1.Value = DateTime.Now;
+            }
+            mClockUpdater.Start();
+        }
+
+        private void buttonLogFile_Click(object sender, EventArgs e)
+        {
+            using (SaveFileDialog fd = new SaveFileDialog())
+            {
+                fd.DefaultExt = "csv";
+                fd.Filter = "Comma separated values file (*.csv)|*.csv";
+                DialogResult result = fd.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    textBoxLogFile.Text = fd.FileName;
+                    Properties.Settings.Default.LogPath = fd.FileName;
+                    Properties.Settings.Default.Save();
+                    int iPos = textBoxLogFile.Text.Trim().LastIndexOf("\\");
+                    if (iPos > 0) { sFehlerDatei = textBoxLogFile.Text.Trim().Substring(0, iPos) + "\\fehlerDatei.csv"; }
+                    else { sFehlerDatei = "C:\\temp\\fehlerDatei.csv"; }
+
+                    // Titelzeile, falls Datei leer
+                    using (FileStream fs = File.Open(textBoxLogFile.Text, FileMode.OpenOrCreate))
+                    {
+                        if (new FileInfo(textBoxLogFile.Text).Length == 0)
+                        {
+                            byte[] buffer = System.Text.Encoding.ASCII.GetBytes(
+                                "\"Uhrzeit\",\"Kennung\",\"TQ Nummer\",\"Programmierzeit\",\"HJS Seriennummer\",\"Hardwareversion\",\"Kalibrierwert\",\"Temperatur\"");
+                            fs.Write(buffer, 0, buffer.Length);
+                            buffer[0] = 13;
+                            fs.Write(buffer, 0, 1);
+                            buffer[0] = 10;
+                            fs.Write(buffer, 0, 1);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void writeFehlerDatei(string sMessage)
+        {
+            try
+            {
+                StreamWriter file = new StreamWriter(sFehlerDatei, true);
+                file.WriteLine(sMessage);
+                //
+                file.Close();
+            }
+            catch(Exception ex){ System.Console.WriteLine("Fehler bei der Funktion [writeFehlerDatei] ", ex.Message);}
+        }
+
+        private void buttonProgram_Click(object sender, EventArgs e)
+        {
+            UInt32 sn = 0;
+            HJS.ReturnValue ret = HJS.ReturnValue.Retry;
+            byte[] buffer = new byte[1];
+            string csv = "";
+            double temp = 20;
+            Int16 temp_offset_alt = 20;
+            Int16 temp_offset_neu = 20;
+            //
+            double EcuTemp1 = 0.0;
+            double EcuTemp2 = 0.0;
+            double EcuTemp3 = 0.0;
+            double EcuTemp4 = 0.0;
+            double EcuTemp5 = 0.0;
+            double EcuTempAVG = 0.0;
+            //
+            string sEcuTemp1 = "1";
+            string sEcuTemp2 = "2";
+            string sEcuTemp3 = "3";
+            string sEcuTemp4 = "4";
+            string sEcuTemp5 = "5";
+            //
+
+            labelStatus.Text = "Auswertung Eingaben ..";
+
+            if (comboBoxTesterPort.SelectedItem == null)
+            {
+                MessageBox.Show("Fehler: Tester Schnittstelle nicht gewählt!");
+                writeFehlerDatei("Fehler: Tester Schnittstelle nicht gewählt!");
+                return;
+            }
+            if (comboBoxEcuPort.SelectedItem == null)
+            {
+                MessageBox.Show("Fehler: Steuergeräte-Schnittstelle nicht gewählt!");
+                writeFehlerDatei("Fehler: Steuergeräte-Schnittstelle nicht gewählt!");
+                return;
+            }
+            if (textBoxSN.Text.StartsWith("DS/N: ")
+                || textBoxSN.Text.StartsWith("S/N: "))
+            {
+                String snr = String.Empty;
+                if (textBoxSN.Text.StartsWith("DS/N: "))
+                {
+                    snr = textBoxSN.Text.Substring(6);
+                }
+                else
+                {
+                    snr = textBoxSN.Text.Substring(5);
+                }
+                if (!UInt32.TryParse(snr, out sn))
+                {
+                    MessageBox.Show("Fehler: HJS Seriennummer ist keine Zahl!");
+                    writeFehlerDatei("Fehler: HJS Seriennummer ist keine Zahl!");
+                    return;
+                }
+                if (String.IsNullOrEmpty(labelTQnumber.Text))
+                {
+                    MessageBox.Show("Fehler: Keine TQ Seriennummer eingegeben!");
+                    writeFehlerDatei("Fehler: Keine TQ Seriennummer eingegeben!");
+                    return;
+                }
+            }
+            else
+            {
+                labelStatus.Text = "HJS Seriennummer eingeben";
+                labelTQnumber.Text = textBoxSN.Text;
+                textBoxSN.Text = string.Empty;
+                return;
+            }
+
+            labelStatus.Text = "Verbinde mit Tester ..";
+
+            using (HJS.ECU.Protocol.TesterProtocol mTester = new HJS.ECU.Protocol.TesterProtocol(comboBoxTesterPort.SelectedItem.ToString(), mKey))
+            {
+                HJS.ECU.Diagnostics.Diag mEcu = new HJS.ECU.Diagnostics.Diag(comboBoxEcuPort.SelectedItem.ToString(), mKey, HJS.ECU.Protocol.ProtocolBase.LanguageId.German);
+                mEcu.ChangeServerIdentifier(HJS.ECU.Port.Comm.ServerByte.Production);
+
+                ret = mTester.Connect();
+                labelStatus.Text = "Verbinde mit Prüfling ..";
+                if (ret == HJS.ReturnValue.NoError)
+                {
+                    mTester.ResetTo12V();
+                    if (mTester.IsEcuDetected())
+                    {
+                        mTester.SupplyOn();
+                        mTester.Lamps(HJS.ECU.Protocol.TesterProtocol.LampMode.YellowOnly);
+                        System.Threading.Thread.Sleep(250); // ECU booten lassen
+                        if (mEcu.Connect(HJS.ECU.Port.Comm.PortType.Direct,true))   //(mEcu.FastConnect(HJS.ECU.Port.Comm.PortType.Direct
+                        {
+                            if (mEcu.SetTime(dateTimePicker1.Value))
+                            {
+                                try
+                                {
+                                    mTester.ReadTemperature(out temp);
+                                }
+                                catch (Exception ex1)
+                                {
+                                    MessageBox.Show("Fehler beim Lesen der Temperatur, mTester.ReadTemperature() - bitte wiederholen sie den Vorgang!");
+                                    writeFehlerDatei(DateTime.Now + "; " +  textBoxName.Text.Trim() + "; " +  sn.ToString() + "; Fehler beim Lesen der Temperatur, mTester.ReadTemperature()" + ex1.Message);
+                                    return;
+                                }
+                                //
+                                try
+                                {
+                                    mEcu.ReadActualValues();
+                                    sEcuTemp1 = mEcu.GetActualValueString(3);
+                                    if (!double.TryParse(sEcuTemp1, out EcuTemp1))
+                                    {
+                                        EcuTemp1 = 20;
+                                        writeFehlerDatei(DateTime.Now + "; " + textBoxName.Text.Trim() + "; " + sn.ToString() + "; " + sEcuTemp1  + " ; Fehler beim Lesen der Temperatur, ReadActualValues()");
+                                    }
+                                    //EcuTemp1 = double.Parse(sEcuTemp1);   
+                                    System.Threading.Thread.Sleep(500);
+                                    //
+                                    mEcu.ReadActualValues();
+                                    sEcuTemp2 = mEcu.GetActualValueString(3);
+                                    if (!double.TryParse(sEcuTemp2, out EcuTemp2))
+                                    {
+                                        EcuTemp2 = 20;
+                                        writeFehlerDatei(DateTime.Now + "; " + textBoxName.Text.Trim() + "; " + sn.ToString() + "; " + sEcuTemp2 + " ; Fehler beim Lesen der Temperatur, ReadActualValues()");
+                                    }
+                                    //EcuTemp2 = double.Parse(sEcuTemp2);
+                                    System.Threading.Thread.Sleep(500);
+                                    //
+                                    mEcu.ReadActualValues();
+                                    sEcuTemp3 = mEcu.GetActualValueString(3);
+                                    if (!double.TryParse(sEcuTemp3, out EcuTemp3))
+                                    {
+                                        EcuTemp3 = 20;
+                                        writeFehlerDatei(DateTime.Now + "; " + textBoxName.Text.Trim() + "; " + sn.ToString() + "; " + sEcuTemp3 + " ; Fehler beim Lesen der Temperatur, ReadActualValues()");
+                                    }
+                                    //EcuTemp3 = double.Parse(sEcuTemp3);
+                                    System.Threading.Thread.Sleep(500);
+                                    //
+                                    mEcu.ReadActualValues();
+                                    sEcuTemp4 = mEcu.GetActualValueString(3);
+                                    if (!double.TryParse(sEcuTemp4, out EcuTemp4))
+                                    {
+                                        EcuTemp4 = 20;
+                                        writeFehlerDatei(DateTime.Now + "; " + textBoxName.Text.Trim() + "; " + sn.ToString() + "; " + sEcuTemp4 + " ; Fehler beim Lesen der Temperatur, ReadActualValues()");
+                                    }
+                                    //EcuTemp4 = double.Parse(sEcuTemp4);
+                                    System.Threading.Thread.Sleep(500);
+                                    //
+                                    mEcu.ReadActualValues();
+                                    sEcuTemp5 = mEcu.GetActualValueString(3);
+                                    if (!double.TryParse(sEcuTemp5, out EcuTemp5))
+                                    {
+                                        EcuTemp5 = 20;
+                                        writeFehlerDatei(DateTime.Now + "; " + textBoxName.Text.Trim() + "; " + sn.ToString() + "; " + sEcuTemp5 + " ; Fehler beim Lesen der Temperatur, ReadActualValues()");
+                                    }
+                                    //EcuTemp5 = double.Parse(sEcuTemp5);
+                                    //
+                                    EcuTempAVG = (EcuTemp1 + EcuTemp2 + EcuTemp3 + EcuTemp4 + EcuTemp5) / 5;
+                                }
+                                catch (Exception ex2)
+                                {
+                                    MessageBox.Show("Fehler beim Lesen der Temperatur, ReadActualValues() - bitte wiederholen sie den Vorgang!\r\n" + sEcuTemp1 + " ; " + sEcuTemp2 + " ; " + sEcuTemp3 + " ; " + sEcuTemp4 + " ; " + sEcuTemp5 + " ; " + EcuTempAVG);
+                                    writeFehlerDatei(DateTime.Now + "; " + textBoxName.Text.Trim() + "; " + sn.ToString() + ";" + sEcuTemp1 + ";" + sEcuTemp2 + ";" + sEcuTemp3 + ";" + sEcuTemp4 + ";" + sEcuTemp5 + ";" + EcuTempAVG + "; Fehler beim Lesen der Temperatur, ReadActualValues()" + ex2.Message);
+                                    return;
+                                }
+                                //
+                                try
+                                {
+                                    temp_offset_alt = mEcu.GetEcuTemperatureOffset();
+                                }
+                                catch (Exception ex3)
+                                {
+                                    MessageBox.Show("Fehler beim Lesen der TemperaturOffset, GetEcuTemperatureOffset() - bitte wiederholen sie den Vorgang!\r\n" + "temp_offset_alt:" + temp_offset_alt);
+                                    writeFehlerDatei(DateTime.Now + "; " + textBoxName.Text.Trim() + "; " + sn.ToString() + "; Fehler beim Lesen der TemperaturOffset, GetEcuTemperatureOffset()" + "temp_offset_alt:" + temp_offset_alt + " ; " + ex3.Message);
+                                    return;
+                                }
+                                //
+                                try
+                                {
+                                    temp_offset_neu = temp_offset_alt;
+                                    temp += 0.5;
+                                    temp_offset_neu += Convert.ToInt16(temp);
+                                    EcuTempAVG += 0.5;
+                                    temp_offset_neu -= Convert.ToInt16(EcuTempAVG);       //Int16.Parse(mEcu.GetActualValueString(3)); //HJS.ECU.Firmware.MessWert9.MRW_SI_T_ECU
+                                }
+                                catch (Exception ex3)
+                                {
+                                    MessageBox.Show("Fehler bei der Offseterrechnung, temp_offset_neu - bitte wiederholen sie den Vorgang!\r\n" + EcuTempAVG + "; " + temp + " ; " + temp_offset_alt + ";" + temp_offset_neu);
+                                    writeFehlerDatei(DateTime.Now + "; " + textBoxName.Text.Trim() + "; " + sn.ToString() + "; Fehler bei der Offseterrechnung, temp_offset_neu:" + EcuTempAVG + "; " + temp + " ; " + temp_offset_alt + ";" + temp_offset_neu + ";" + ex3.Message);
+                                    return;
+                                }
+                               //
+                                labelStatus.Text = "Schreibe Produktionsdaten";
+                                System.Threading.Thread.Sleep(10);
+
+                                if (mEcu.SetProductionData(sn, temp_offset_neu)) //Int16.Parse(textBoxTemp.Text)))
+                                {
+                                    labelStatus.Text = "Verifizierung ..";
+                                    mEcu.Disconnect();
+                                    ////######Test Start###################################
+                                    ////Errechnen der ECU-Temperatur mit neuem temp_offset
+                                    //System.Threading.Thread.Sleep(500);
+                                    //if (mEcu.Connect(HJS.ECU.Port.Comm.PortType.Direct, true))   //(mEcu.FastConnect(HJS.ECU.Port.Comm.PortType.Direct
+                                    //{
+                                    //    if (mEcu.SetTime(dateTimePicker1.Value))
+                                    //    {
+                                    //        mTester.ReadTemperature(out temp);
+                                    //        //
+                                    //        mEcu.ReadActualValues();
+                                    //        EcuTempNeu = double.Parse(mEcu.GetActualValueString(3));
+                                    //    }
+                                    //    mEcu.Disconnect();
+                                    //}
+                                    //System.Threading.Thread.Sleep(500);
+                                    ////######Test Start###################################
+                                    mEcu.FastConnect(HJS.ECU.Port.Comm.PortType.Direct);
+                                    if (mEcu.SerialNumber == sn.ToString())
+                                    {
+                                        using (FileStream fs = File.Open(textBoxLogFile.Text, FileMode.OpenOrCreate))
+                                        {
+                                            fs.Seek(0, SeekOrigin.End);
+                                            // Uhrzeit
+                                            buffer[0] = (byte)'"';
+                                            fs.Write(buffer, 0, 1);
+                                            csv = dateTimePicker1.Value.ToShortDateString();
+                                            buffer = System.Text.Encoding.ASCII.GetBytes(csv);
+                                            fs.Write(buffer, 0, buffer.Length);
+                                            buffer[0] = (byte)' ';
+                                            fs.Write(buffer, 0, 1);
+                                            csv = dateTimePicker1.Value.ToShortTimeString();
+                                            buffer = System.Text.Encoding.ASCII.GetBytes(csv);
+                                            fs.Write(buffer, 0, buffer.Length);
+                                            buffer = new byte[3];
+                                            buffer[0] = (byte)'"';
+                                            //Kennung (user)
+                                            buffer[1] = (byte)',';
+                                            buffer[2] = (byte)'"';
+                                            fs.Write(buffer, 0, 3);
+                                            buffer = System.Text.Encoding.ASCII.GetBytes(textBoxName.Text);
+                                            fs.Write(buffer, 0, buffer.Length);
+                                            buffer = new byte[3];
+                                            buffer[0] = (byte)'"';
+                                            //TQ nummer
+                                            buffer[1] = (byte)',';
+                                            buffer[2] = (byte)'"';
+                                            fs.Write(buffer, 0, 3);
+                                            buffer = System.Text.Encoding.ASCII.GetBytes(labelTQnumber.Text);
+                                            fs.Write(buffer, 0, buffer.Length);
+                                            buffer = new byte[3];
+                                            buffer[0] = (byte)'"';
+                                            //Programmierzeit
+                                            buffer[1] = (byte)',';
+                                            buffer[2] = (byte)'"';
+                                            fs.Write(buffer, 0, 3);
+                                            csv = mEcu.ProductionDate.ToShortDateString();
+                                            buffer = System.Text.Encoding.ASCII.GetBytes(csv);
+                                            fs.Write(buffer, 0, buffer.Length);
+                                            buffer[0] = (byte)' ';
+                                            fs.Write(buffer, 0, 1);
+                                            csv = mEcu.ProductionDate.ToShortTimeString();
+                                            buffer = System.Text.Encoding.ASCII.GetBytes(csv);
+                                            fs.Write(buffer, 0, buffer.Length);
+                                            buffer = new byte[3];
+                                            buffer[0] = (byte)'"';
+                                            //SN
+                                            buffer[1] = (byte)',';
+                                            buffer[2] = (byte)'"';
+                                            fs.Write(buffer, 0, 3);
+                                            buffer = System.Text.Encoding.ASCII.GetBytes(mEcu.SerialNumber);
+                                            fs.Write(buffer, 0, buffer.Length);
+                                            buffer = new byte[3];
+                                            buffer[0] = (byte)'"';
+                                            //hwver
+                                            buffer[1] = (byte)',';
+                                            buffer[2] = (byte)'"';
+                                            fs.Write(buffer, 0, 3);
+                                            buffer = System.Text.Encoding.ASCII.GetBytes(mEcu.HardwareVersion);
+                                            fs.Write(buffer, 0, buffer.Length);
+                                            buffer = new byte[3];
+                                            buffer[0] = (byte)'"';
+                                            //kalib temp
+                                            buffer[1] = (byte)',';
+                                            buffer[2] = (byte)'"';
+                                            fs.Write(buffer, 0, 3);
+                                            buffer = System.Text.Encoding.ASCII.GetBytes(temp_offset_neu.ToString());
+                                            fs.Write(buffer, 0, buffer.Length);
+                                            buffer = new byte[3];
+                                            buffer[0] = (byte)'"';
+                                            //temp
+                                            buffer[1] = (byte)',';
+                                            buffer[2] = (byte)'"';
+                                            fs.Write(buffer, 0, 3);
+                                            buffer = System.Text.Encoding.ASCII.GetBytes(temp.ToString());
+                                            fs.Write(buffer, 0, buffer.Length);
+                                            buffer = new byte[3];//## 1
+                                            buffer[0] = (byte)'"';
+                                            fs.Write(buffer, 0, 1);  //Zurück nach dem Test
+                                            ////############################## Test Start###
+                                            ////offsetAlt
+                                            //buffer[1] = (byte)',';
+                                            //buffer[2] = (byte)'"';
+                                            //fs.Write(buffer, 0, 3);
+                                            //buffer = System.Text.Encoding.ASCII.GetBytes(temp_offset_alt.ToString());
+                                            //fs.Write(buffer, 0, buffer.Length);
+                                            //buffer = new byte[3];
+                                            //buffer[0] = (byte)'"';
+                                            ////EcuTempAlt_AVG
+                                            //buffer[1] = (byte)',';
+                                            //buffer[2] = (byte)'"';
+                                            //fs.Write(buffer, 0, 3);
+                                            //buffer = System.Text.Encoding.ASCII.GetBytes(EcuTempAVG.ToString()); //mEcu.GetActualValueString(3));
+                                            //fs.Write(buffer, 0, buffer.Length);
+                                            //buffer = new byte[3];
+                                            //buffer[0] = (byte)'"';
+                                            ////EcuTempNeu
+                                            //buffer[1] = (byte)',';
+                                            //buffer[2] = (byte)'"';
+                                            //fs.Write(buffer, 0, 3);
+                                            //buffer = System.Text.Encoding.ASCII.GetBytes(EcuTempNeu.ToString()); //mEcu.GetActualValueString(3));
+                                            //fs.Write(buffer, 0, buffer.Length);
+                                            //buffer[0] = (byte)'"';
+                                            ////
+                                            //fs.Write(buffer, 0, 1);
+                                            ////############################## Test Ende###
+                                            // end of line
+                                            buffer[0] = 13;
+                                            fs.Write(buffer, 0, 1);
+                                            buffer[0] = 10;
+                                            fs.Write(buffer, 0, 1);
+                                            fs.Close();
+                                        }
+                                        labelTQnumber.Text = string.Empty;
+                                        textBoxSN.Text = "";
+                                        mTester.Lamps(HJS.ECU.Protocol.TesterProtocol.LampMode.GreenOnly);
+                                        labelStatus.Text = "Erfolgreich";
+                                    }
+                                    else
+                                    {
+                                        mTester.Lamps(HJS.ECU.Protocol.TesterProtocol.LampMode.RedOnly);
+                                        MessageBox.Show("Fehler: falsche HJS Seriennummer (" + mEcu.SerialNumber + ")!\r\nBitte wiederholen!");
+                                        writeFehlerDatei(DateTime.Now + "; " + textBoxName.Text.Trim() + "; " + sn.ToString() + "; Fehler: falsche HJS Seriennummer (" + mEcu.SerialNumber + ")!\r\nBitte wiederholen!");
+                                    }
+                                }
+                                else
+                                { 
+                                    labelStatus.Text = "Schreibe Produktionsdaten wiederholt";
+                                    System.Threading.Thread.Sleep(100);
+                                    if (mEcu.SetProductionData(sn, temp_offset_neu))  
+                                    {
+                                        labelStatus.Text = "Verifizierung ..";
+                                        mEcu.Disconnect();
+                                        ////######Test Start###################################
+                                        //System.Threading.Thread.Sleep(500);
+                                        //if (mEcu.Connect(HJS.ECU.Port.Comm.PortType.Direct, true))   //(mEcu.FastConnect(HJS.ECU.Port.Comm.PortType.Direct
+                                        //{
+                                        //    if (mEcu.SetTime(dateTimePicker1.Value))
+                                        //    {
+                                        //        mTester.ReadTemperature(out temp);
+                                        //        //
+                                        //        mEcu.ReadActualValues();
+                                        //        EcuTempNeu = double.Parse(mEcu.GetActualValueString(3));
+                                        //    }
+                                        //    mEcu.Disconnect();
+                                        //}
+                                        //System.Threading.Thread.Sleep(500);
+                                        ////######Test Start###################################
+
+                                        mEcu.FastConnect(HJS.ECU.Port.Comm.PortType.Direct);
+                                        if (mEcu.SerialNumber == sn.ToString())
+                                        {
+                                            using (FileStream fs = File.Open(textBoxLogFile.Text, FileMode.OpenOrCreate))
+                                            {
+                                                fs.Seek(0, SeekOrigin.End);
+                                                // Uhrzeit
+                                                buffer[0] = (byte)'"';
+                                                fs.Write(buffer, 0, 1);
+                                                csv = dateTimePicker1.Value.ToShortDateString();
+                                                buffer = System.Text.Encoding.ASCII.GetBytes(csv);
+                                                fs.Write(buffer, 0, buffer.Length);
+                                                buffer[0] = (byte)' ';
+                                                fs.Write(buffer, 0, 1);
+                                                csv = dateTimePicker1.Value.ToShortTimeString();
+                                                buffer = System.Text.Encoding.ASCII.GetBytes(csv);
+                                                fs.Write(buffer, 0, buffer.Length);
+                                                buffer = new byte[3];
+                                                buffer[0] = (byte)'"';
+                                                //Kennung (user)
+                                                buffer[1] = (byte)',';
+                                                buffer[2] = (byte)'"';
+                                                fs.Write(buffer, 0, 3);
+                                                buffer = System.Text.Encoding.ASCII.GetBytes(textBoxName.Text);
+                                                fs.Write(buffer, 0, buffer.Length);
+                                                buffer = new byte[3];
+                                                buffer[0] = (byte)'"';
+                                                //TQ nummer
+                                                buffer[1] = (byte)',';
+                                                buffer[2] = (byte)'"';
+                                                fs.Write(buffer, 0, 3);
+                                                buffer = System.Text.Encoding.ASCII.GetBytes(labelTQnumber.Text);
+                                                fs.Write(buffer, 0, buffer.Length);
+                                                buffer = new byte[3];
+                                                buffer[0] = (byte)'"';
+                                                //Programmierzeit
+                                                buffer[1] = (byte)',';
+                                                buffer[2] = (byte)'"';
+                                                fs.Write(buffer, 0, 3);
+                                                csv = mEcu.ProductionDate.ToShortDateString();
+                                                buffer = System.Text.Encoding.ASCII.GetBytes(csv);
+                                                fs.Write(buffer, 0, buffer.Length);
+                                                buffer[0] = (byte)' ';
+                                                fs.Write(buffer, 0, 1);
+                                                csv = mEcu.ProductionDate.ToShortTimeString();
+                                                buffer = System.Text.Encoding.ASCII.GetBytes(csv);
+                                                fs.Write(buffer, 0, buffer.Length);
+                                                buffer = new byte[3];
+                                                buffer[0] = (byte)'"';
+                                                //SN
+                                                buffer[1] = (byte)',';
+                                                buffer[2] = (byte)'"';
+                                                fs.Write(buffer, 0, 3);
+                                                buffer = System.Text.Encoding.ASCII.GetBytes(mEcu.SerialNumber);
+                                                fs.Write(buffer, 0, buffer.Length);
+                                                buffer = new byte[3];
+                                                buffer[0] = (byte)'"';
+                                                //hwver
+                                                buffer[1] = (byte)',';
+                                                buffer[2] = (byte)'"';
+                                                fs.Write(buffer, 0, 3);
+                                                buffer = System.Text.Encoding.ASCII.GetBytes(mEcu.HardwareVersion);
+                                                fs.Write(buffer, 0, buffer.Length);
+                                                buffer = new byte[3];
+                                                buffer[0] = (byte)'"';
+                                                //kalib temp
+                                                buffer[1] = (byte)',';
+                                                buffer[2] = (byte)'"';
+                                                fs.Write(buffer, 0, 3);
+                                                buffer = System.Text.Encoding.ASCII.GetBytes(temp_offset_neu.ToString());
+                                                fs.Write(buffer, 0, buffer.Length);
+                                                buffer = new byte[3];
+                                                buffer[0] = (byte)'"';
+                                                //temp
+                                                buffer[1] = (byte)',';
+                                                buffer[2] = (byte)'"';
+                                                fs.Write(buffer, 0, 3);
+                                                buffer = System.Text.Encoding.ASCII.GetBytes(temp.ToString());
+                                                fs.Write(buffer, 0, buffer.Length);
+                                                buffer = new byte[3];//## 1
+                                                buffer[0] = (byte)'"';
+                                                fs.Write(buffer, 0, 1);  //Zurück nach dem Test
+                                                ////############################## Test Start###
+                                                ////offsetAlt
+                                                //buffer[1] = (byte)',';
+                                                //buffer[2] = (byte)'"';
+                                                //fs.Write(buffer, 0, 3);
+                                                //buffer = System.Text.Encoding.ASCII.GetBytes(temp_offset_alt.ToString());
+                                                //fs.Write(buffer, 0, buffer.Length);
+                                                //buffer = new byte[3];
+                                                //buffer[0] = (byte)'"';
+                                                ////EcuTempAlt_AVG
+                                                //buffer[1] = (byte)',';
+                                                //buffer[2] = (byte)'"';
+                                                //fs.Write(buffer, 0, 3);
+                                                //buffer = System.Text.Encoding.ASCII.GetBytes(EcuTempAVG.ToString()); //mEcu.GetActualValueString(3));
+                                                //fs.Write(buffer, 0, buffer.Length);
+                                                //buffer = new byte[3];
+                                                //buffer[0] = (byte)'"';
+                                                ////EcuTempNeu
+                                                //buffer[1] = (byte)',';
+                                                //buffer[2] = (byte)'"';
+                                                //fs.Write(buffer, 0, 3);
+                                                //buffer = System.Text.Encoding.ASCII.GetBytes(EcuTempNeu.ToString()); //mEcu.GetActualValueString(3));
+                                                //fs.Write(buffer, 0, buffer.Length);
+                                                //buffer[0] = (byte)'"';
+                                                ////
+                                                //fs.Write(buffer, 0, 1);
+                                                ////############################## Test Ende###
+                                                // end of line
+                                                buffer[0] = 13;
+                                                fs.Write(buffer, 0, 1);
+                                                buffer[0] = 10;
+                                                fs.Write(buffer, 0, 1);
+                                                fs.Close();
+                                            }
+                                            labelTQnumber.Text = string.Empty;
+                                            textBoxSN.Text = "";
+                                            mTester.Lamps(HJS.ECU.Protocol.TesterProtocol.LampMode.GreenOnly);
+                                         // labelStatus.Text = "5";
+                                            labelStatus.Text = "Erfolgreich!";
+                                        }
+                                        else
+                                        {
+                                            mTester.Lamps(HJS.ECU.Protocol.TesterProtocol.LampMode.RedOnly);
+                                            MessageBox.Show("Fehler: falsche HJS Seriennummer (" + mEcu.SerialNumber + ")!\r\nBitte wiederholen!");
+                                            writeFehlerDatei(DateTime.Now + "; " + textBoxName.Text.Trim() + "; " + sn.ToString() + "; Fehler: falsche HJS Seriennummer (" + mEcu.SerialNumber + ")!\r\nBitte wiederholen!");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        mTester.Lamps(HJS.ECU.Protocol.TesterProtocol.LampMode.RedOnly);
+                                        MessageBox.Show("Fehler: Schreiben (SN) fehlgeschlagen (" + mEcu.LastReturnValue.ToString() + ")!");
+                                        writeFehlerDatei(DateTime.Now + "; " + textBoxName.Text.Trim() + "; " + sn.ToString() + "; Fehler: Schreiben (SN) fehlgeschlagen (" + mEcu.LastReturnValue.ToString() + ")!");
+                                    }
+                                }
+                                //----------------------------------
+                            }
+                            else
+                            {
+                                mTester.Lamps(HJS.ECU.Protocol.TesterProtocol.LampMode.RedOnly);
+                                MessageBox.Show("Fehler: Schreiben (Zeit) fehlgeschlagen (" + mEcu.LastReturnValue.ToString() + ")!");
+                                writeFehlerDatei(DateTime.Now + "; " + textBoxName.Text.Trim() + "; " + sn.ToString() + "; Fehler: Schreiben (Zeit) fehlgeschlagen (" + mEcu.LastReturnValue.ToString() + ")!");
+                            }
+                        }
+                        else
+                        {
+                            mTester.Lamps(HJS.ECU.Protocol.TesterProtocol.LampMode.RedOnly);
+                            MessageBox.Show("Fehler: Keine Verbindung zum Tester (" + mEcu.LastReturnValue.ToString() + ")!");
+                            writeFehlerDatei(DateTime.Now + "; " + textBoxName.Text.Trim() + "; " + sn.ToString() + "; Fehler: Keine Verbindung zum Tester (" + mEcu.LastReturnValue.ToString() + ")!");
+                        }
+                    }
+                    else
+                    {
+                        mTester.Lamps(HJS.ECU.Protocol.TesterProtocol.LampMode.RedOnly);
+                        MessageBox.Show("Keine ECU erkannt!");
+                        writeFehlerDatei(DateTime.Now + "; " + textBoxName.Text.Trim() + "; " + sn.ToString() + "; Keine ECU erkannt!");
+                    }
+                }
+                else
+                {
+                    //mTester.Lamps(HJS.ECU.Protocol.TesterProtocol.LampMode.RedOnly);
+                    MessageBox.Show("Fehler: Keine Verbindung zum Tester (" + ret.ToString() + ")!");
+                    writeFehlerDatei(DateTime.Now + "; " + textBoxName.Text.Trim() + "; " + sn.ToString() + "; Fehler: Keine Verbindung zum Tester (" + ret.ToString() + ")!");
+                }
+                mEcu.Disconnect();
+                mTester.Disconnect();
+            }
+        }
+
+        private void comboBoxTesterPort_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.TesterPort = comboBoxTesterPort.SelectedItem.ToString();
+            Properties.Settings.Default.Save();
+        }
+
+        private void comboBoxEcuPort_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.EcuPort = comboBoxEcuPort.SelectedItem.ToString();
+            Properties.Settings.Default.Save();
+        }
+
+        private void textBoxName_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.Handled = true;
+                textBoxSN.Focus();
+            }
+        }
+
+        private void textBoxSN_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.Handled = true;
+                buttonProgram_Click(sender, EventArgs.Empty);
+            }
+        }
+    }
+}

@@ -1,0 +1,160 @@
+/*
+ * Object: HJS.AuthorBlock
+ * Description: Block of file author information
+ * 
+ * $LastChangedDate: 2014-03-06 08:11:36 +0100 (Do, 06 Mrz 2014) $
+ * $LastChangedRevision: 41 $
+ * $LastChangedBy: ksi $
+ * $HeadURL: http://menden22/svn/devel/electronic/app_cs_win32_ecudiagmini/branch/EcuTools/HJS.ECU/AuthorBlock.cs $
+ * 
+ * LastReviewDate: 
+ * LastReviewRevision: 
+ * LastReviewBy: 
+ */
+using System;
+
+namespace HJS
+{
+    /// <summary>Block of file author information</summary>
+    public class AuthorBlock : Block
+    {
+        /// <summary>Creation date</summary>
+        private long mCreationTime;
+
+        /// <summary>Computer name</summary>
+        private string mComputername;
+
+        /// <summary>User name</summary>
+        private string mUsername;
+
+        /// <summary>Maximum size of string in block data (without zero termination!)</summary>
+        private const int MAX_STRING_LENGTH = 16;
+
+        /// <summary>Default constructor</summary>
+        public AuthorBlock()
+        {
+            Type = BlockId.IdAuthor;
+            Version = 1;
+            DataSize = 40;
+        }
+
+        /// <summary>Overloaded constructor</summary>
+        /// <param name="b">Reference to author block in base class type</param>
+        public AuthorBlock(Block b)
+        {
+            Type = BlockId.IdAuthor;
+            Version = 1;
+            DataSize = 40;
+
+            if (b.Type == BlockId.IdAuthor)
+            {
+                b.GetData(out mBlockData);
+                Parse();
+            }
+        }
+
+        /// <summary>Parse byte array</summary>
+        public void Parse()
+        {
+            int i = 0;
+            if (mBlockData == null) return;
+
+            mCreationTime = BitConverter.ToInt64(mBlockData, 0);
+            mComputername = "";
+            for (i = 8; i < (8 + MAX_STRING_LENGTH); i++)
+            {
+                if (mBlockData[i] != 0)
+                {
+                    mComputername += (char)mBlockData[i];
+                }
+                else
+                {
+                    break;
+                }
+            }
+            mUsername = "";
+            for (i = 8 + MAX_STRING_LENGTH; i < (8 + MAX_STRING_LENGTH + MAX_STRING_LENGTH); i++)
+            {
+                if (mBlockData[i] != 0)
+                {
+                    mUsername += (char)mBlockData[i];
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+
+        /// <summary>Accessors for creation date</summary>
+        public long CreationTime
+        {
+            get { return mCreationTime; }
+            set { mCreationTime = value; }
+        }
+
+        /// <summary>Accessors for computer name</summary>
+        public string Computername
+        {
+            get { return mComputername; }
+            set { mComputername = value; }
+        }
+
+        /// <summary>Accessors for user name</summary>
+        public string Username
+        {
+            get { return mUsername; }
+            set { mUsername = value; }
+        }
+
+        /// <summary>Generate block data</summary>
+        public void Generate()
+        {
+            byte[] raw = new byte[DataSize];
+            DateTime dt = DateTime.Now;
+            int PositionInRaw = 0;
+            int i = 0;
+
+            // Creation date
+            mCreationTime = dt.ToFileTime();
+            long lTemp = mCreationTime;
+            byte[] DateBytes = BitConverter.GetBytes(lTemp);
+            for (i = 0; i < DateBytes.Length; i++)
+            {
+                raw[i] = DateBytes[i];
+            }
+            PositionInRaw += DateBytes.Length;
+
+            //Computer name
+            mComputername = Environment.MachineName;
+            int ComputerNameLength = (mComputername.Length > MAX_STRING_LENGTH) ? MAX_STRING_LENGTH - 1 : mComputername.Length;
+            char[] ComputernameArray = mComputername.ToCharArray(0, ComputerNameLength);
+            for (i = 0; i < ComputerNameLength; i++)
+            {
+                raw[i + PositionInRaw] = (byte)ComputernameArray[i];
+            }
+            for (i = ComputerNameLength; i < MAX_STRING_LENGTH; i++)
+            {
+                raw[i + PositionInRaw] = 0;
+            }
+            PositionInRaw += MAX_STRING_LENGTH;
+
+            //Username
+            mUsername = Environment.UserName;
+            int UserNameLength = (mUsername.Length > MAX_STRING_LENGTH) ? MAX_STRING_LENGTH - 1 : mUsername.Length;
+            char[] UsernameArray = mUsername.ToCharArray(0, UserNameLength);
+            for (i = 0; i < UserNameLength; i++)
+            {
+                raw[i + PositionInRaw] = (byte)UsernameArray[i];
+            }
+            for (i = UserNameLength; i < MAX_STRING_LENGTH; i++)
+            {
+                raw[i + PositionInRaw] = 0;
+            }
+            PositionInRaw += MAX_STRING_LENGTH;
+
+            mBlockData = raw;
+            GenerateChecksum();
+        }
+    }
+}

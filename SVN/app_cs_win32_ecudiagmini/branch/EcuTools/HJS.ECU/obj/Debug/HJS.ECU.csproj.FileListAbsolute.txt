@@ -1,0 +1,12 @@
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\HJS.ECU\bin\Debug\HJS.ECU.XML
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\HJS.ECU\bin\Debug\HJS.ECU.dll
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\HJS.ECU\bin\Debug\HJS.ECU.pdb
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\HJS.ECU\obj\Debug\HJS.ECU.dll
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\HJS.ECU\obj\Debug\HJS.ECU.pdb
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\HJS.ECU\obj\Debug\HJS.ECU.csprojResolveAssemblyReference.cache
+C:\Users\mob\Desktop\MOB\EcuTools\HJS.ECU\bin\Debug\HJS.ECU.XML
+C:\Users\mob\Desktop\MOB\EcuTools\HJS.ECU\bin\Debug\HJS.ECU.dll
+C:\Users\mob\Desktop\MOB\EcuTools\HJS.ECU\bin\Debug\HJS.ECU.pdb
+C:\Users\mob\Desktop\MOB\EcuTools\HJS.ECU\obj\Debug\HJS.ECU.csprojResolveAssemblyReference.cache
+C:\Users\mob\Desktop\MOB\EcuTools\HJS.ECU\obj\Debug\HJS.ECU.dll
+C:\Users\mob\Desktop\MOB\EcuTools\HJS.ECU\obj\Debug\HJS.ECU.pdb

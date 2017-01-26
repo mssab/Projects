@@ -1,0 +1,429 @@
+/*
+ * Object: HJS.ECU.Diag.Acqisition
+ * Description: Measurement history
+ * 
+ * $LastChangedDate: 2013-03-05 13:39:53 +0100 (Di, 05 Mrz 2013) $
+ * $LastChangedRevision: 19 $
+ * $LastChangedBy: ksi $
+ * $HeadURL: http://menden22/svn/devel/electronic/app_cs_win32_ecudiagmini/trunk/lib_cs_win32_hjsecu/Acquisition.cs $
+ * 
+ * LastReviewDate: 
+ * LastReviewRevision: 
+ * LastReviewBy: 
+ */
+using System;
+using System.Text;
+using System.Xml;
+using HJS.ECU.Protocol;
+
+namespace HJS.ECU.Diag
+{
+    /// <summary>
+    /// Acquisition item (single row)
+    /// </summary>
+    public class AcquisitionItem
+    {
+        /// <summary>
+        /// String array of row entries
+        /// </summary>
+        public string[] Row;
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public AcquisitionItem()
+        {
+            Row = new string[30];
+        }
+    }
+
+    /// <summary>
+    /// Measurement history (acquisition) of HJS-ECU
+    /// </summary>
+    public class Acquisition
+    {
+        /// <summary>
+        /// Number of acquisition data flash blocks (32768 bytes)
+        /// </summary>
+        private byte mNumberOfBlocks;
+
+        /// <summary>
+        /// Savemask for minimum values
+        /// </summary>
+        private bool[] mSaveMin;
+
+        /// <summary>
+        /// Savemask for average values
+        /// </summary>
+        private bool[] mSaveAvg;
+
+        /// <summary>
+        /// Savemask for maximum values
+        /// </summary>
+        private bool[] mSaveMax;
+
+        /// <summary>
+        /// Measurement identifiers of sources
+        /// </summary>
+        private byte[] mSourceValues;
+
+        /// <summary>
+        /// String array of table headlines
+        /// </summary>
+        private string[] mHead;
+
+        /// <summary>
+        /// Value position
+        /// </summary>
+        private Byte[] mValuePosition;
+
+        /// <summary>
+        /// Number of bytes per acquisition item
+        /// </summary>
+        private UInt16 mRowLength;
+
+        /// <summary>
+        /// Item array of acquisition data
+        /// </summary>
+        private AcquisitionItem[] mItem;
+
+        /// <summary>
+        /// Current acquisition data flash block
+        /// </summary>
+        public byte[] ReadBuffer;
+
+        /// <summary>
+        /// Accessors to number of used acquisition data blocks
+        /// </summary>
+        public byte NumberOfBlocks
+        {
+            get { return mNumberOfBlocks; }
+        }
+
+        /// <summary>
+        /// Set acquisition configuration according to connected ECU
+        /// </summary>
+        /// <param name="protocol">Reference to protocol to connected ECU</param>
+        public void SetConfiguration(ref ProtocolBase protocol)
+        {
+            //byte[] AcquisitionSources = new byte[10];
+            //for (byte i = 0; i < 10; i++)
+            //{
+            //    AcquisitionSources[i] = protocol.AcquisitionSource(i);
+            //}
+
+            mNumberOfBlocks = protocol.AcquisitionSectors;
+
+            // Save mask
+            byte NumOfCols = 0;
+            mSaveMin = new bool[10];
+            mSaveAvg = new bool[10];
+            mSaveMax = new bool[10];
+            UInt32 Mask = 1;
+            for (int i = 0; i < 10; i++)
+            {
+                if ((protocol.AcquisitionSaveMask & Mask) == 0)
+                {
+                    mSaveMin[i] = false;
+                }
+                else
+                {
+                    mSaveMin[i] = true;
+                    NumOfCols++;
+                }
+                Mask = (UInt32)(Mask * 2);
+                if ((protocol.AcquisitionSaveMask & Mask) == 0)
+                {
+                    mSaveAvg[i] = false;
+                }
+                else
+                {
+                    mSaveAvg[i] = true;
+                    NumOfCols++;
+                }
+                Mask = (UInt32)(Mask * 2);
+                if ((protocol.AcquisitionSaveMask & Mask) == 0)
+                {
+                    mSaveMax[i] = false;
+                }
+                else
+                {
+                    mSaveMax[i] = true;
+                    NumOfCols++;
+                }
+                Mask = (UInt32)(Mask * 2);
+            }
+
+            mSourceValues = new byte[10];
+            for (byte i = 0; i < 10; i++)
+            {
+                mSourceValues[i] = protocol.AcquisitionSource(i);
+            }
+
+            // row
+            mHead = new string[NumOfCols + 1];
+            mHead[0] = "DateTime";
+            mValuePosition = new byte[NumOfCols + 1];
+            mRowLength = 1;
+            for (int i = 0; i < 10; i++)
+            {
+                byte ValuePosition = protocol.GetValuePosition(mSourceValues[i]);
+                string ValueName = protocol.GetValueName(ValuePosition);
+                string ValueUnit = protocol.GetValueUnit(ValuePosition);
+                if (ValueName != null)
+                {
+                    if (mSaveMin[i] == true)
+                    {
+                        mHead[mRowLength] = String.Format("{0}_MIN_in_{1}", ValueName, ValueUnit);
+                        mValuePosition[mRowLength - 1] = ValuePosition;
+                        // Replace prohibited xml characters
+                        mHead[mRowLength] = mHead[mRowLength].Replace(@" ", @"_");
+                        mHead[mRowLength] = mHead[mRowLength].Replace(@"@", @"at");
+                        mHead[mRowLength] = mHead[mRowLength].Replace(@"%", @"_Pozent");
+                        mRowLength++;
+                    }
+                    if (mSaveAvg[i] == true)
+                    {
+                        mHead[mRowLength] = String.Format("{0}_AVG_in_{1}", ValueName, ValueUnit);
+                        mValuePosition[mRowLength - 1] = ValuePosition;
+                        // Replace prohibited xml characters
+                        mHead[mRowLength] = mHead[mRowLength].Replace(@" ", @"_");
+                        mHead[mRowLength] = mHead[mRowLength].Replace(@"@", @"at");
+                        mHead[mRowLength] = mHead[mRowLength].Replace(@"%", @"_Pozent");
+                        mRowLength++;
+                    }
+                    if (mSaveMax[i] == true)
+                    {
+                        mHead[mRowLength] = String.Format("{0}_MAX_in_{1}", ValueName, ValueUnit);
+                        mValuePosition[mRowLength - 1] = ValuePosition;
+                        // Replace prohibited xml characters
+                        mHead[mRowLength] = mHead[mRowLength].Replace(@" ", @"_");
+                        mHead[mRowLength] = mHead[mRowLength].Replace(@"@", @"at");
+                        mHead[mRowLength] = mHead[mRowLength].Replace(@"%", @"_Pozent");
+                        mRowLength++;
+                    }
+                }
+            }
+            mItem = new AcquisitionItem[0];
+            //mData = new string[mRowLength, 0];
+
+            // calculate row length from amount of values to amount of bytes
+            // all values are 2-byte-values
+            mRowLength = (UInt16)(mRowLength * 2);
+            // except date has 3 bytes
+            mRowLength++;
+
+        }
+
+        /// <summary>
+        /// Imort one flash block from ECU
+        /// </summary>
+        /// <param name="Data">Referece to target byte array</param>
+        /// <param name="protocol">Reference to protocol to connected ECU</param>
+        public void ImportSector(ref byte[] Data, ref ProtocolBase protocol)
+        {
+            if (mRowLength == 0) { return; }
+            // parse 1 32-K-Sektor
+            //FileStream fs = new FileStream("Acqui.xml", FileMode.Create);
+
+            //file
+            string[] ValueString = new string[1 + (mRowLength -1) / 2];
+            int FilledData = 32768 / mRowLength;
+            FilledData = FilledData * mRowLength;
+            int ItemCount = mItem.Length;
+            for (UInt16 ByteInData = 0; ByteInData < FilledData; ByteInData += mRowLength)
+            {
+                if (mRowLength > 3)
+                {
+                    // ignore empty or erased items
+                    if (((Data[ByteInData] == 0x00)
+                        && (Data[ByteInData + 1] == 0x00)
+                        && (Data[ByteInData + 2] == 0x00)
+                        && (Data[ByteInData + 3] == 0x00)
+                        && (Data[ByteInData + 4] == 0x00))
+                        ||
+                        ((Data[ByteInData] == 0xFF)
+                        && (Data[ByteInData + 1] == 0xFF)
+                        && (Data[ByteInData + 2] == 0xFF)
+                        && (Data[ByteInData + 3] == 0xFF)
+                        && (Data[ByteInData + 4] == 0xFF)))
+                    {
+                        // ignore this item
+                    }
+                    else
+                    {
+                        Array.Resize(ref mItem, ItemCount + 1);
+                        mItem[ItemCount] = new AcquisitionItem();
+
+                        // date time
+                        UInt32 MinuteSinceProgramming = (UInt32)(((Data[ByteInData + 2] * 256) + Data[ByteInData + 1]) * 256) + Data[ByteInData];
+                        DateTime RowTime = protocol.GetDateTimeFromMinute(MinuteSinceProgramming);
+                        // string nach locale zeit?
+                        ValueString[0] = RowTime.ToString();   //.ToString("s");
+                        mItem[ItemCount].Row[0] = ValueString[0];
+                        for (int i = 0; i < ((mRowLength - 1) / 2) - 1; i++)
+                        {
+                            ValueString[i + 1] = protocol.GetValueString(mValuePosition[i],
+                                (UInt16)((Data[ByteInData + 4 + (i * 2)] * 256) + Data[ByteInData + 3 + (i * 2)]));
+                            mItem[ItemCount].Row[i + 1] = ValueString[i + 1];
+                        }
+                        ItemCount++;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get number of acquisition items
+        /// </summary>
+        /// <returns>Number of acquisition items</returns>
+        public int NumberOfItems()
+        {
+            if (mItem == null)
+            {
+                return 0;
+            }
+            else
+            {
+                return mItem.Length;
+            }
+        }
+
+        /// <summary>
+        /// Delete acquisition items
+        /// </summary>
+        public void DeleteItems()
+        {
+            mItem = new AcquisitionItem[0];
+        }
+
+        /// <summary>
+        /// Export acquisition data to a XML file
+        /// </summary>
+        /// <param name="Filename">Target file name</param>
+        /// <param name="protocol">Reference to protocol to connected ECU</param>
+        public void XmlExport(string Filename, ref ProtocolBase protocol)
+        {
+            XmlWriter xf = null;
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.OmitXmlDeclaration = false;
+            settings.ConformanceLevel = ConformanceLevel.Document;
+            settings.Encoding = System.Text.Encoding.UTF8;  //"iso-8859-1";
+            settings.Indent = true;
+            settings.IndentChars = "\t";
+            settings.NewLineOnAttributes = true;
+            try
+            {
+                xf = XmlWriter.Create(Filename, settings);
+                xf.WriteStartElement("acqui_root");
+
+                xf.WriteStartElement("ECU");
+                xf.WriteStartElement("Serialnumber");
+                xf.WriteValue(protocol.SerialNumber);
+                xf.WriteEndElement(); // S/N
+                xf.WriteStartElement("Hardware");
+                xf.WriteValue(string.Format("{0}.{1}.{2}", protocol.HardwareVersion.Hauptversion, protocol.HardwareVersion.Nebenversion, protocol.HardwareVersion.Revision));
+                xf.WriteEndElement(); // HW V
+                xf.WriteStartElement("Software");
+                xf.WriteValue(string.Format("{0}.{1}.{2}", protocol.SoftwareVersion.Hauptversion, protocol.SoftwareVersion.Nebenversion, protocol.SoftwareVersion.Revision));
+                xf.WriteEndElement(); // SW V
+                xf.WriteStartElement("Configuration");
+                xf.WriteValue(string.Format("{0}.{1}.{2}", protocol.ConfigurationVersion.Hauptversion, protocol.ConfigurationVersion.Nebenversion, protocol.ConfigurationVersion.Revision));
+                xf.WriteEndElement(); // CFG V
+                xf.WriteStartElement("Datamap");
+                xf.WriteValue(string.Format("{0}.{1}.{2}", protocol.DatamapVersion.Hauptversion, protocol.DatamapVersion.Nebenversion, protocol.DatamapVersion.Revision));
+                xf.WriteEndElement(); // KF V
+                xf.WriteEndElement(); // ECU
+
+                ASCIIEncoding ascii = new ASCIIEncoding();
+                byte[] byteArray;
+                byte[] asciiArray;
+                string convString;
+
+                for (int item = 0; item < mItem.Length; item++)
+                {
+                    xf.WriteStartElement("acqui_item");
+                    for (int row = 0; row < ((mRowLength - 1) / 2) - 1; row++)
+                    {
+                        // Name auf ascii zeichen beschraenken, und ? durch _ ersetzen
+                        byteArray = Encoding.UTF8.GetBytes(mHead[row]);
+                        asciiArray = Encoding.Convert(Encoding.UTF8, Encoding.ASCII, byteArray);
+                        convString = ascii.GetString(asciiArray);
+                        convString = convString.Replace("?", "_");
+
+                        xf.WriteStartElement(convString);
+                        xf.WriteValue(mItem[item].Row[row]);
+                        xf.WriteEndElement();
+                    }
+                    xf.WriteEndElement();
+                }
+                xf.WriteEndElement(); // root
+                xf.Flush();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception during opening XML file: {0}", ex.Message);
+            }
+            finally
+            {
+                xf.Close();
+            }
+        }
+
+        /// <summary>
+        /// Export acquisition data to a CSV file
+        /// </summary>
+        /// <param name="Filename">Target file name</param>
+        /// <param name="protocol">Reference to protocol to connected ECU</param>
+        public void CsvExport(string Filename, ref ProtocolBase protocol)
+        {
+            System.IO.StreamWriter writer = new System.IO.StreamWriter(Filename, false);
+            string _ProgDate = "";
+
+            if (protocol.LocalTime)
+            {
+                _ProgDate = protocol.DateOfProgramming.ToLocalTime().ToString("dd.MM.yyyy HH:mm");
+            }
+            else
+            {
+                _ProgDate = protocol.DateOfProgramming.ToUniversalTime().ToString("dd.MM.yyyy HH:mm UTC");
+            }
+
+            string _header = String.Format("Production date: {0} SN: {1} HW:V{2}.{3}.{4} SW:V{5}.{6}.{7} CFG:V{8}.{9}.{10}",
+                _ProgDate,
+                protocol.SerialNumber,
+                protocol.HardwareVersion.Hauptversion,
+                protocol.HardwareVersion.Nebenversion,
+                protocol.HardwareVersion.Revision,
+                protocol.SoftwareVersion.Hauptversion,
+                protocol.SoftwareVersion.Nebenversion,
+                protocol.SoftwareVersion.Revision,
+                protocol.ConfigurationVersion.Hauptversion,
+                protocol.ConfigurationVersion.Nebenversion,
+                protocol.ConfigurationVersion.Revision
+
+            );
+            writer.WriteLine(_header);
+
+            string _title = "";
+            for (int row = 0; row < ((mRowLength - 1) / 2) - 1; row++)
+            {
+                _title += String.Format("{0}{1}",mHead[row],
+                    System.Globalization.CultureInfo.CurrentCulture.TextInfo.ListSeparator);
+            }
+            writer.WriteLine(_title);
+
+            for (int item = 0; item < mItem.Length; item++)
+            {
+                string _row = "";
+                for (int row = 0; row < ((mRowLength - 1) / 2) - 1; row++)
+                {
+                    _row += String.Format("{0}{1}", mItem[item].Row[row],
+                    System.Globalization.CultureInfo.CurrentCulture.TextInfo.ListSeparator);
+                }
+                writer.WriteLine(_row);
+            }
+            writer.Close();
+        }
+    }
+}

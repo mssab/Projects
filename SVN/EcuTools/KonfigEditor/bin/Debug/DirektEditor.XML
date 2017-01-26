@@ -1,0 +1,530 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>DirektEditor</name>
+    </assembly>
+    <members>
+        <member name="T:KonfigEditor.Controls.LanguageStringUserControl">
+            <summary>User control for one editable string</summary>
+        </member>
+        <member name="F:KonfigEditor.Controls.LanguageStringUserControl.LanguageString">
+            <summary>Content of form</summary>
+        </member>
+        <member name="M:KonfigEditor.Controls.LanguageStringUserControl.#ctor(System.String)">
+            <summary>Constructor</summary>
+        </member>
+        <member name="M:KonfigEditor.Controls.LanguageStringUserControl.UpdataData(System.Boolean)">
+            <summary>Refresh contents of controls with content of public variables</summary>
+        </member>
+        <member name="F:KonfigEditor.Controls.LanguageStringUserControl.components">
+            <summary> 
+            Erforderliche Designervariable.
+            </summary>
+        </member>
+        <member name="M:KonfigEditor.Controls.LanguageStringUserControl.Dispose(System.Boolean)">
+            <summary> 
+            Verwendete Ressourcen bereinigen.
+            </summary>
+            <param name="disposing">True, wenn verwaltete Ressourcen gelöscht werden sollen; andernfalls False.</param>
+        </member>
+        <member name="M:KonfigEditor.Controls.LanguageStringUserControl.InitializeComponent">
+            <summary> 
+            Erforderliche Methode für die Designerunterstützung. 
+            Der Inhalt der Methode darf nicht mit dem Code-Editor geändert werden.
+            </summary>
+        </member>
+        <member name="T:KonfigEditor.Controls.LanguageValueUserControl">
+            <summary>User control for editable value texts</summary>
+        </member>
+        <member name="F:KonfigEditor.Controls.LanguageValueUserControl.ValueName">
+            <summary>Name of value</summary>
+        </member>
+        <member name="F:KonfigEditor.Controls.LanguageValueUserControl.Unit">
+            <summary>Unit of value</summary>
+        </member>
+        <member name="F:KonfigEditor.Controls.LanguageValueUserControl.Factor">
+            <summary>Factor of value</summary>
+        </member>
+        <member name="F:KonfigEditor.Controls.LanguageValueUserControl.Divisor">
+            <summary>Divisor of value</summary>
+        </member>
+        <member name="F:KonfigEditor.Controls.LanguageValueUserControl.Offset">
+            <summary>Offset of value</summary>
+        </member>
+        <member name="F:KonfigEditor.Controls.LanguageValueUserControl.AltUnit">
+            <summary>Alternative unit of value</summary>
+        </member>
+        <member name="M:KonfigEditor.Controls.LanguageValueUserControl.#ctor">
+            <summary>Constructor</summary>
+        </member>
+        <member name="M:KonfigEditor.Controls.LanguageValueUserControl.UpdataData(System.Boolean)">
+            <summary>Refresh contents of controls with content of public variables</summary>
+        </member>
+        <member name="F:KonfigEditor.Controls.LanguageValueUserControl.components">
+            <summary> 
+            Erforderliche Designervariable.
+            </summary>
+        </member>
+        <member name="M:KonfigEditor.Controls.LanguageValueUserControl.Dispose(System.Boolean)">
+            <summary> 
+            Verwendete Ressourcen bereinigen.
+            </summary>
+            <param name="disposing">True, wenn verwaltete Ressourcen gelöscht werden sollen; andernfalls False.</param>
+        </member>
+        <member name="M:KonfigEditor.Controls.LanguageValueUserControl.InitializeComponent">
+            <summary> 
+            Erforderliche Methode für die Designerunterstützung. 
+            Der Inhalt der Methode darf nicht mit dem Code-Editor geändert werden.
+            </summary>
+        </member>
+        <member name="T:KonfigEditor.Forms.DownloadForm">
+            <summary>Form for selecting file to download</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.DownloadForm.Filename">
+            <summary>Selected file name</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.DownloadForm.User">
+            <summary>User name</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.DownloadForm.Password">
+            <summary>Password</summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.DownloadForm.#ctor">
+            <summary>Default constructor</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.DownloadForm.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.DownloadForm.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:KonfigEditor.Forms.DownloadForm.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="T:KonfigEditor.Forms.EditDatamapContentForm">
+            <summary>From for editing data map content</summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditDatamapContentForm.#ctor(HJS.ECU.Parameter.ParameterSet,System.Int32,System.Int32)">
+            <summary>Consrturctor</summary>
+            <param name="param">Parameter set</param>
+            <param name="datamapPosition">Position of datamap</param>
+            <param name="SelectedRow">Selected row number</param>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditDatamapContentForm.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditDatamapContentForm.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditDatamapContentForm.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="T:KonfigEditor.Forms.EditDatamapForm">
+            <summary>Edit datamap structure form</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditDatamapForm.Identifier">
+            <summary>Identifier</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditDatamapForm.X_Start">
+            <summary>Start of X Axis</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditDatamapForm.Y_Start">
+            <summary>Start of Y Axis</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditDatamapForm.Z_Start">
+            <summary>Start of Z Axis</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditDatamapForm.X_Size">
+            <summary>Step size of X Axis</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditDatamapForm.Y_Size">
+            <summary>Step size of Y Axis</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditDatamapForm.Z_Size">
+            <summary>Step size of Z Axis</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditDatamapForm.X_Steps">
+            <summary>Steps of X Axis</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditDatamapForm.Y_Steps">
+            <summary>Steps of Y Axis</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditDatamapForm.Z_Steps">
+            <summary>Steps of Z Axis</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditDatamapForm.Dimension">
+            <summary>Dimension of data map</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditDatamapForm.KfType">
+            <summary>Type of data map</summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditDatamapForm.#ctor(System.UInt32,HJS.ECU.Firmware.KennfeldTyp,System.Byte,System.Int16,System.Int16,System.UInt16,System.Int16,System.Int16,System.UInt16,System.Int16,System.Int16,System.UInt16,System.Array)">
+            <summary>Default constructor</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditDatamapForm.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditDatamapForm.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditDatamapForm.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="T:KonfigEditor.Forms.EditTaskErrorsForm">
+            <summary>Form for editing task errors</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTaskErrorsForm.err0">
+            <summary>Value for task error 0</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTaskErrorsForm.err1">
+            <summary>Value for task error 1</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTaskErrorsForm.err2">
+            <summary>Value for task error 2</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTaskErrorsForm.err3">
+            <summary>Value for task error 3</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTaskErrorsForm.err4">
+            <summary>Value for task error 4</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTaskErrorsForm.err5">
+            <summary>Value for task error 5</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTaskErrorsForm.err6">
+            <summary>Value for task error 6</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTaskErrorsForm.ring0">
+            <summary>Flag if task error 0 is stored in ring memory</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTaskErrorsForm.ring1">
+            <summary>Flag if task error 1 is stored in ring memory</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTaskErrorsForm.ring2">
+            <summary>Flag if task error 2 is stored in ring memory</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTaskErrorsForm.ring3">
+            <summary>Flag if task error 3 is stored in ring memory</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTaskErrorsForm.ring4">
+            <summary>Flag if task error 4 is stored in ring memory</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTaskErrorsForm.ring5">
+            <summary>Flag if task error 5 is stored in ring memory</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTaskErrorsForm.ring6">
+            <summary>Flag if task error 6 is stored in ring memory</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTaskErrorsForm.reserve1">
+            <summary>Reserved flag for task error 0</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTaskErrorsForm.reserve2">
+            <summary>Reserved flag for task error 1</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTaskErrorsForm.reserve3">
+            <summary>Reserved flag for task error 2</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTaskErrorsForm.reserve4">
+            <summary>Reserved flag for task error 3</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTaskErrorsForm.reserve5">
+            <summary>Reserved flag for task error 4</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTaskErrorsForm.reserve6">
+            <summary>Reserved flag for task error 5</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTaskErrorsForm.reserve7">
+            <summary>Reserved flag for task error 0</summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditTaskErrorsForm.#ctor(System.String)">
+            <summary>Constructor</summary>
+            <param name="taskName">Name of task</param>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditTaskErrorsForm.RefreshValues">
+            <summary>Refresh values from public variables</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTaskErrorsForm.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditTaskErrorsForm.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditTaskErrorsForm.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="T:KonfigEditor.Forms.EditTextBehaveForm">
+            <summary>Form for editing single language strings</summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditTextBehaveForm.#ctor(HJS.ECU.Parameter.ParameterSet,System.Int32)">
+            <summary>Constructor</summary>
+            <param name="param">Parameter set</param>
+            <param name="BehavePosition">Position of behave</param>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTextBehaveForm.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditTextBehaveForm.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditTextBehaveForm.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="T:KonfigEditor.Forms.EditTextErrorForm">
+            <summary>Form for editing error language</summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditTextErrorForm.#ctor(HJS.ECU.Parameter.ParameterSet,System.Int32)">
+            <summary>Constructor</summary>
+            <param name="param">Parameter set</param>
+            <param name="ErrorPosition">Position of error</param>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTextErrorForm.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditTextErrorForm.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditTextErrorForm.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="T:KonfigEditor.Forms.EditTextValueForm">
+            <summary>Form for editing value texts</summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditTextValueForm.#ctor(HJS.ECU.Parameter.ParameterSet,System.Int32)">
+            <summary>Constructor</summary>
+            <param name="param">Parameter set</param>
+            <param name="ValuePosition">Position of value</param>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditTextValueForm.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditTextValueForm.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditTextValueForm.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="T:KonfigEditor.Forms.EditValueForm">
+            <summary>Form for editing single values</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditValueForm.NewValue">
+            <summary>New Value</summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditValueForm.#ctor(System.String,System.String,System.Double,System.Array)">
+            <summary>Constructor</summary>
+            <param name="groupName">Group name (Task, init, ..)</param>
+            <param name="itemName">Item name</param>
+            <param name="itemValue">Value before editing</param>
+            <param name="itemEnumValues">Array of selectable enum values</param>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditValueForm.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditValueForm.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditValueForm.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="T:KonfigEditor.Forms.EditVersionForm">
+            <summary>Edit version number form</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditVersionForm.newVersion">
+            <summary>New version</summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditVersionForm.#ctor(System.String)">
+            <summary>Constructor</summary>
+            <param name="currentVersion">Current version</param>
+        </member>
+        <member name="F:KonfigEditor.Forms.EditVersionForm.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditVersionForm.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:KonfigEditor.Forms.EditVersionForm.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="T:KonfigEditor.Forms.KonfigEditorMainForm">
+            <summary>Main form</summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.KonfigEditorMainForm.#ctor(System.String[])">
+            <summary>Default constructor</summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.KonfigEditorMainForm.paramShowList_Report">
+            <summary>Show report</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.KonfigEditorMainForm.components">
+            <summary>
+            Erforderliche Designervariable.
+            </summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.KonfigEditorMainForm.Dispose(System.Boolean)">
+            <summary>
+            Verwendete Ressourcen bereinigen.
+            </summary>
+            <param name="disposing">True, wenn verwaltete Ressourcen gelöscht werden sollen; andernfalls False.</param>
+        </member>
+        <member name="M:KonfigEditor.Forms.KonfigEditorMainForm.InitializeComponent">
+            <summary>
+            Erforderliche Methode für die Designerunterstützung.
+            Der Inhalt der Methode darf nicht mit dem Code-Editor geändert werden.
+            </summary>
+        </member>
+        <member name="T:KonfigEditor.Forms.InfoForm">
+            <summary>Information form</summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.InfoForm.#ctor">
+            <summary>Constructor</summary>
+        </member>
+        <member name="F:KonfigEditor.Forms.InfoForm.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:KonfigEditor.Forms.InfoForm.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:KonfigEditor.Forms.InfoForm.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="M:KonfigEditor.Program.Main(System.String[])">
+            <summary>
+            Der Haupteinstiegspunkt für die Anwendung.
+            </summary>
+        </member>
+        <member name="T:KonfigEditor.Properties.Resources">
+            <summary>
+              Eine stark typisierte Ressourcenklasse zum Suchen von lokalisierten Zeichenfolgen usw.
+            </summary>
+        </member>
+        <member name="P:KonfigEditor.Properties.Resources.ResourceManager">
+            <summary>
+              Gibt die zwischengespeicherte ResourceManager-Instanz zurück, die von dieser Klasse verwendet wird.
+            </summary>
+        </member>
+        <member name="P:KonfigEditor.Properties.Resources.Culture">
+            <summary>
+              Überschreibt die CurrentUICulture-Eigenschaft des aktuellen Threads für alle
+              Ressourcenzuordnungen, die diese stark typisierte Ressourcenklasse verwenden.
+            </summary>
+        </member>
+        <member name="P:KonfigEditor.Properties.Resources.book_2">
+            <summary>
+              Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:KonfigEditor.Properties.Resources.database">
+            <summary>
+              Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:KonfigEditor.Properties.Resources.document_new_2">
+            <summary>
+              Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:KonfigEditor.Properties.Resources.edit_user">
+            <summary>
+              Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:KonfigEditor.Properties.Resources.file_doc">
+            <summary>
+              Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:KonfigEditor.Properties.Resources.insert_table_2">
+            <summary>
+              Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:KonfigEditor.Properties.Resources.internet_chat_2">
+            <summary>
+              Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:KonfigEditor.Properties.Resources.wrench">
+            <summary>
+              Sucht eine lokalisierte Ressource vom Typ System.Drawing.Icon ähnlich wie (Symbol).
+            </summary>
+        </member>
+    </members>
+</doc>

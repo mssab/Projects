@@ -1,0 +1,412 @@
+/*
+ * Object: HJS.ECU.Parameter.Configuration10_Block
+ * Description: Configuration parameter block compatibility 10 initial values
+ * 
+ * $LastChangedDate: 2014-11-26 13:48:11 +0100 (Mi, 26 Nov 2014) $
+ * $LastChangedRevision: 76 $
+ * $LastChangedBy: ksi $
+ * $HeadURL: http://menden22/svn/devel/electronic/app_cs_win32_ecudiagmini/branch/EcuTools/HJS.ECU/Parameter/Configuration10_Block.InitialValues.cs $
+ * 
+ * LastReviewDate: 
+ * LastReviewRevision: 
+ * LastReviewBy: 
+ */
+using System;
+
+namespace HJS.ECU.Parameter
+{
+    public partial class Configuration10_Block
+    {
+        private TaskConfigurationItem[] InitValueItem;
+        private const int InitValueByteOffset = 259;
+
+        /// <summary>Check initial value items versus plausibity</summary>
+        /// <returns>Empty string on success, else error text</returns>
+        public override string CheckInitValueItems()
+        {
+            string ret = "";
+            if (InitValueItem != null)
+            {
+                for (int position = 0; position < InitValueItem.Length; position++)
+                {
+                    ret = InitValueItem[position].CheckValue(ref mBlockData, 10);
+                    if (!String.IsNullOrEmpty(ret))
+                    {
+                        return String.Format("LernwerteInit.{0}", ret);
+                    }
+                }
+            }
+            else
+            {
+                return "LernwerteInit hat keine Items";
+            }
+            return ret;
+        }
+
+        /// <summary>Import initial values from base block</summary>
+        public override void InitValueImport()
+        {
+            UInt16 ItemPosition = 0;
+            UInt16 DataPosition = InitValueByteOffset;
+
+            Array.Resize(ref InitValueItem, 75);
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sBeladCRT.uiTempMinGrenze", TaskDataType.type_uint_16, DataPosition);
+            InitValueItem[ItemPosition].SetPlausibilityMax(100);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sBeladCRT.ulFree[0]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sBeladCRT.ulFree[1]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sBeladCRT.ulFree[2]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sBeladCRT.ulFree[3]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.ucResetBehaveWatch", TaskDataType.type_uint_8, DataPosition);
+            InitValueItem[ItemPosition].SetPlausibilityMax(15);
+            DataPosition = (UInt16)(DataPosition + 1); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.uiPalarm", TaskDataType.type_uint_16, DataPosition);
+            InitValueItem[ItemPosition].SetPlausibilityMax(750);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.uiTalarm", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.uiPalarmResetDelay", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.uiPwarn", TaskDataType.type_uint_16, DataPosition);
+            InitValueItem[ItemPosition].SetPlausibilityMax(750);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.uiTwarn", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.uiPwarnResetDelay", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.uiPbroken", TaskDataType.type_uint_16, DataPosition);
+            InitValueItem[ItemPosition].SetPlausibilityMax(750);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.uiPbrokenTime", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.uiPbrokenTimeDelay", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.uiTurnSchwelleMin", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.siTvorAlarmValue", TaskDataType.type_uint_16, DataPosition);
+            InitValueItem[ItemPosition].SetPlausibilityMin(-2731);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.uiTvorAlarmTime", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.uiTvorAlarmResetDelay", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.siTvorWarnValue", TaskDataType.type_uint_16, DataPosition);
+            InitValueItem[ItemPosition].SetPlausibilityMin(-2731);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.uiTvorWarnTime", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.uiTvorWarnResetDelay", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.siTnachAlarmValue", TaskDataType.type_int_16, DataPosition);
+            InitValueItem[ItemPosition].SetPlausibilityMin(-2731);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.uiTnachAlarmTime", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.uiTnachAlarmResetDelay", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.siTnachWarnValue", TaskDataType.type_int_16, DataPosition);
+            InitValueItem[ItemPosition].SetPlausibilityMin(-2731);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.uiTnachWarnTime", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.uiTnachWarnResetDelay", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.uiAdditivImFilter", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.ulFree[0]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.ulFree[1]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.ulFree[2]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sVert.ulFree[3]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sTurns.fFaktorTurns", TaskDataType.type_float_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sTurns.uiKilometerzaehler", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sTurns.ulFree[0]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sTurns.ulFree[1]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sTurns.ulFree[2]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sTurns.ulFree[3]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sDosi.uiSollKonzentration", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sDosi.uiKraftstoffverbrauch", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sDosi.ulAdditivtankinhalt", TaskDataType.type_uint_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sDosi.ulFree[0]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sDosi.ulFree[1]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sDosi.ulFree[2]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sDosi.ulFree[3]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sIO.uiDPlus", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sIO.ucTempEnable", TaskDataType.type_uint_8, DataPosition);
+            InitValueItem[ItemPosition].SetPlausibilityMax(3);
+            DataPosition = (UInt16)(DataPosition + 1); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sIO.uiAmbPressureCalibration", TaskDataType.type_uint_16, DataPosition);
+            InitValueItem[ItemPosition].SetPlausibilityMax(120);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sIO.ulFree[0]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sIO.ulFree[1]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sIO.ulFree[2]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sIO.ulFree[3]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sGrundfos.ulReserved[0]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sGrundfos.ulReserved[1]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sGrundfos.ulReserved[2]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sGrundfos.ulFree[0]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sGrundfos.ulFree[1]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sGrundfos.ulFree[2]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sGrundfos.ulFree[3]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sAddi.ulAddStandard", TaskDataType.type_uint_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sAddi.ulFree[0]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sAddi.ulFree[1]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sAddi.ulFree[2]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sAddi.ulFree[3]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sStaudruck.fAirMassKFactor", TaskDataType.type_float_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sStaudruck.ulFree[0]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sStaudruck.ulFree[1]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sStaudruck.ulFree[2]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sStaudruck.ulFree[3]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sMaf.fDisplacedVolume", TaskDataType.type_float_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sMaf.ulFree[0]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sMaf.ulFree[1]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sMaf.ulFree[2]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            InitValueItem[ItemPosition] = new TaskConfigurationItem("sMaf.ulFree[3]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+        }
+
+        /// <summary>Number of init value items</summary>
+        /// <returns>Number of init value items</returns>
+        public override int InitValueGetNumber()
+        {
+            return InitValueItem.Length;
+        }
+
+        /// <summary>Get name of init value item</summary>
+        /// <param name="position">Position of item</param>
+        /// <returns>Name of init value item</returns>
+        public override string InitValueGetItemName(int position)
+        {
+            if (InitValueItem != null)
+            {
+                if (position < InitValueItem.Length)
+                {
+                    return InitValueItem[position].Name;
+
+                }
+                else
+                {
+                    return "N/A";
+                }
+            }
+            else
+            {
+                return "N/A";
+            }
+        }
+
+        /// <summary>Get value of init value item</summary>
+        /// <param name="position">Position of item</param>
+        /// <returns>Value of init value item as double</returns>
+        public override double InitValueGetItemValue(int position)
+        {
+            if (InitValueItem != null)
+            {
+                if (position < InitValueItem.Length)
+                {
+                    return InitValueItem[position].GetValue(ref mBlockData);
+
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        /// <summary>Set value of init value item</summary>
+        /// <param name="position">Position of item</param>
+        /// <param name="NewValue">New Value to be set</param>
+        /// <returns>True on success</returns>
+        public override bool InitValueSetItemValue(int position, double NewValue)
+        {
+            if (InitValueItem != null)
+            {
+                if (position < InitValueItem.Length)
+                {
+                    return InitValueItem[position].SetValue(ref mBlockData, NewValue);
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>Get value string of init value item</summary>
+        /// <param name="position">Position of item</param>
+        /// <returns>Value of init value item as string</returns>
+        public override string InitValueGetItemValueString(int position)
+        {
+            if (InitValueItem != null)
+            {
+                if (position < InitValueItem.Length)
+                {
+                    return InitValueItem[position].GetValueString(ref mBlockData, Version);
+
+                }
+                else
+                {
+                    return "N/A";
+                }
+            }
+            else
+            {
+                return "N/A";
+            }
+        }
+
+        /// <summary>Get data type of init value item</summary>
+        /// <param name="position">Position of item</param>
+        /// <returns>Data type of init value item</returns>
+        public override TaskDataType InitValueGetItemType(int position)
+        {
+            if (InitValueItem != null)
+            {
+                if (position < InitValueItem.Length)
+                {
+                    return InitValueItem[position].DataType;
+
+                }
+                else
+                {
+                    return TaskDataType.type_uint_8;
+                }
+            }
+            else
+            {
+                return TaskDataType.type_uint_8;
+            }
+        }
+    }
+}

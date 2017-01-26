@@ -1,0 +1,770 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ecudiagnose</name>
+    </assembly>
+    <members>
+        <member name="T:EcuDiagnose.Controller">
+            <summary>Object for controlling independent GUI and internal functionionalities</summary>
+        </member>
+        <member name="M:EcuDiagnose.Controller.#ctor(EcuDiagnose.Forms.FrameForm)">
+            <summary>Constructor</summary>
+            <param name="frameForm">Main for object</param>
+        </member>
+        <member name="M:EcuDiagnose.Controller.Connect(System.String,System.Byte,System.Boolean)">
+            <summary>Start connection to ECU</summary>
+            <param name="portName">Name of port (starting with COM)</param>
+            <param name="Language">Language (position in combobox must match enumeration)</param>
+            <param name="LocalTime">Flag if time displayed local (or UTC)</param>
+            <returns>True if connection is established</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.Disconnect">
+            <summary>Disconnect ECU</summary>
+            <returns>Always true</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetRawFileName">
+            <summary>Get string of raw file name</summary>
+            <returns>String of raw file name without extension</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetLastTimeStamp">
+            <summary>Get date time object of last communication time stamp</summary>
+            <returns>String object of last communication time stamp</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.SetTime(System.DateTime)">
+            <summary>Set ecu time</summary>
+            <param name="NewTime">Date time object of new ecu time</param>
+            <returns>True in success</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.ReportProgress(System.Int32)">
+            <summary>Delegated function to report progress to GUI</summary>
+            <param name="percentage">Progress</param>
+            <returns>Always returns true</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.ReportStatus(System.String)">
+            <summary>Delegated function to report status to GUI</summary>
+            <param name="message">Status message</param>
+            <returns>Always returns true</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetVersionsString">
+            <summary>Get version string from ECU</summary>
+            <returns>Version string from ECU</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetInfoText">
+            <summary>Get info text from ECU</summary>
+            <returns>Info text from ECU</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetNumberOfValues">
+            <summary>Get number of values from ECU</summary>
+            <returns>Number of values that can be read from ECU</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetValueRow(System.Byte,System.String@,System.String@,System.String@)">
+            <summary>Get strings of one value from ECU</summary>
+            <param name="rowNum">Position of value, or row number</param>
+            <param name="ValueName">String of value name</param>
+            <param name="FormattedValue">String of formatted value</param>
+            <param name="ValueUnit">String of value unit</param>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetActualValues">
+            <summary>Read actual values from ECU</summary>
+            <returns>Actual values from ECU</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetActualValueHiddenFlag(System.Byte)">
+            <summary>Get hidden flag of one value</summary>
+            <param name="Position">Position or row number of required value</param>
+            <returns>True if value is hidden</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetActualValueDisplayFlag(System.Byte)">
+            <summary>Get display flag of one value</summary>
+            <param name="Position">Position or row number of required value</param>
+            <returns>True if value is displayed</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.ActualValuesSaveFile(System.String,System.Int32)">
+            <summary>Export actual values to a XML file</summary>
+            <param name="Filename">Target file name</param>
+            <param name="mFileExtensionIndex">Extension identifier</param>
+        </member>
+        <member name="M:EcuDiagnose.Controller.ActualValuesToggleUnit(System.Boolean)">
+            <summary>Toggle Alternative unit and original unit</summary>
+            <param name="NoAltUnit">True to use original unit, false for alternative unit (if available)</param>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetErrorRow(System.UInt16,System.String@,System.String@,System.String@,System.String@,System.String@,System.String@,System.String@)">
+            <summary>Get strings of one error / event from ECU</summary>
+            <param name="rowNum">Position of error, or row number</param>
+            <param name="ErrorName">Name of error</param>
+            <param name="Event">String that indicates error or event</param>
+            <param name="ErrorState">State of error</param>
+            <param name="FirstA">String of first accurance</param>
+            <param name="LastA">String of last accurance</param>
+            <param name="UntilA">String ofaccuranced until</param>
+            <param name="Anzahl">Number of Accurances</param>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetBehaveRow(System.Byte,System.String@,System.String@)">
+            <summary>Get strings of one behave</summary>
+            <param name="Position">Position of behave</param>
+            <param name="Name">Name of behave</param>
+            <param name="State">State of behave</param>
+        </member>
+        <member name="M:EcuDiagnose.Controller.IsErrorOccured(System.Byte)">
+            <summary>Check if error is occured</summary>
+            <param name="ErrorNo">Identifier of error (error number)</param>
+            <returns>True if error is occured at least once</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetErrorStack">
+            <summary>Read error stack from ECU</summary>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.ClearErrorStack">
+            <summary>Clear error stack</summary>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.ErrorBehaveSaveFile(System.String,System.Int32)">
+            <summary>Export error stack and behaves to a XML file</summary>
+            <param name="Filename">Target file name</param>
+            <param name="FileExtensionIndex">Extension identifier</param>
+        </member>
+        <member name="M:EcuDiagnose.Controller.ReadAcquisition(System.String,System.Int32)">
+            <summary>Start reading complete acquisition from ECU</summary>
+            <param name="FileName">File name of acquisition file</param>
+            <param name="FileExtensionIndex">Extension identifier</param>
+        </member>
+        <member name="M:EcuDiagnose.Controller.UploadConfig(System.String)">
+            <summary>Upload a parameter set file to ECU</summary>
+            <param name="FileName">File name of parameterset</param>
+            <returns>True if file is uploaded successfully</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.SetProductionData(System.UInt32,System.Int16)">
+            <summary>Set Production data (SN, date, temperature)</summary>
+            <param name="serialNumber">New serialnumber</param>
+            <param name="temperature">New temperature</param>
+            <returns>True in success</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.MasterReset">
+            <summary>Master reset ECU</summary>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.Reboot(HJS.ECU.Protocol.ProtocolBase.RebootMode)">
+            <summary>Reboot into normal mode</summary>
+            <param name="BootMode">Parameter for rebooting</param>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.ReadErrorRing(System.String,System.Int32)">
+            <summary>Start reading complete error ring from ECU</summary>
+            <param name="FileName">File name of error ring file</param>
+            <param name="FileExtensionIndex">Extension identifier</param>
+        </member>
+        <member name="M:EcuDiagnose.Controller.ReadRtc">
+            <summary>Read rtc data</summary>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetNumberOfVolatiles">
+            <summary>Get number of volatiles values</summary>
+            <returns>Number of volatiles values</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetVolatileValue(System.UInt16)">
+            <summary>Get volatile value as string</summary>
+            <param name="Position">Position of volatile value</param>
+            <returns>Volatile value as string</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.ReadEmpiricals">
+            <summary>Read empirical data</summary>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetEmpiricalGroupNames(System.String[]@)">
+            <summary>Get empirical group names</summary>
+            <param name="GroupNames">Position of group</param>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetNumberOfEmpiricalValues(System.UInt16)">
+            <summary>Get number of empirical values</summary>
+            <param name="Group">Position of group</param>
+            <returns>Number of values</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetEmpiricalValue(System.UInt16,System.UInt16)">
+            <summary>Get empirical value string</summary>
+            <param name="GroupPosition">Position of group</param>
+            <param name="ValuePosition">Position of value</param>
+            <returns>String with name and value</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.EmpiricalSaveFile(System.String,System.Int32)">
+            <summary>Export empirical values to a XML file</summary>
+            <param name="Filename">Target file name</param>
+            <param name="mFileExtensionIndex">Extension identifier</param>
+        </member>
+        <member name="M:EcuDiagnose.Controller.ReadDtc">
+            <summary>Read DTC from ECU</summary>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetDtcInfo">
+            <summary>Get DTC info text</summary>
+            <returns>DTC info text</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetDtcFF">
+            <summary>Get DTC freeze frame text</summary>
+            <returns>DTC freeze frame text</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetDtcDerateFlags">
+            <summary>Get DTC derating and flags text</summary>
+            <returns>DTC derating and flags text</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetDtcItemCount">
+            <summary>Get number of stack items</summary>
+            <returns>Number of stack items</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetDtcItem(System.Byte,System.String@,System.String@,System.String@,System.String@,System.String@,System.String@,System.String@,System.String@)">
+            <summary>Get stack item strings</summary>
+            <param name="Position">Position of stack item</param>
+            <param name="strFreeWarmUps">Free warm ups of stack item</param>
+            <param name="strErrorNumber">Error number of stack item</param>
+            <param name="strOccuranceCounter">Occurance counter of stack item</param>
+            <param name="strPending">Pending flag of stack item</param>
+            <param name="strActive">Active flag of stack item</param>
+            <param name="strPrevActive">Previously active flag of stack item</param>
+            <param name="strSPN">Suspect parameter number of stack item</param>
+            <param name="strFMI">Failure mode identifier of stack item</param>
+            <returns>True if stack item strings are set</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.SetOrder(HJS.ECU.Diagnostics.Diag.Orders,System.UInt16)">
+            <summary>Send order to ecu</summary>
+            <param name="OrderId">Order enumerator</param>
+            <param name="OrderValue">Value of order</param>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.DirectOrder(System.Byte,System.UInt16)">
+            <summary>Send direct order to ECU</summary>
+            <param name="OrderByte">Order byte</param>
+            <param name="Parameter">Parameter</param>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.ApplySettings">
+            <summary>Apply changed settings</summary>
+        </member>
+        <member name="M:EcuDiagnose.Controller.SaveReadDataFile(System.String)">
+            <summary>Save read data block file</summary>
+            <param name="Filename">Failename</param>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.SaveAllFiles(System.String)">
+            <summary>Save all files as XML files to certain path</summary>
+            <param name="Path">Path to files to save</param>
+        </member>
+        <member name="M:EcuDiagnose.Controller.ReadConfig(System.String)">
+            <summary>Read a parameter set file from ECU</summary>
+            <param name="FileName">File name of parameterset</param>
+            <returns>True if file is uploaded successfully</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.UploadCfgFile(System.String)">
+            <summary>Upload a config file to ECU </summary>
+            <param name="FileName">File name of config</param>
+            <returns>True if file is uploaded successfully</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.UploadDatFile(System.String)">
+            <summary>Upload a data map file to ECU </summary>
+            <param name="FileName">File name of data map</param>
+            <returns>True if file is uploaded successfully</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.UploadLngFile(System.String)">
+            <summary>Upload a language file to ECU </summary>
+            <param name="FileName">File name of language</param>
+            <returns>True if file is uploaded successfully</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.ReadUpdatables">
+            <summary>Read updatable empirical data</summary>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetUpdatable(System.Int32)">
+            <summary>Get string of updatable</summary>
+            <param name="Position">Position of updatable value</param>
+            <returns>String of udatable value</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.SetUpdatable(System.Int32,System.Byte[])">
+            <summary>Set updatable empirical value</summary>
+            <param name="Position">Position of updatable empirical value</param>
+            <param name="Data">Source byte array</param>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.ReadAvailableLanguages">
+            <summary>Read list of available languages</summary>
+            <returns>List of languages as strings</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.ReadActiveTaskList">
+            <summary>Read list of active tasks</summary>
+            <returns>List of active tasks as strings</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetSerialNumber">
+            <summary>Get serial number from ECU</summary>
+            <returns>Serial number of currently connected ECU</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.GetEcuTemperatureOffset">
+            <summary>Get temperature offset from production data block</summary>
+            <returns>Temperature offset of currently connected ECU</returns>
+        </member>
+        <member name="M:EcuDiagnose.Controller.ReadSbcRegister">
+            <summary>Read system basis chip registers</summary>
+            <returns>Value of SBC registers</returns>
+        </member>
+        <member name="P:EcuDiagnose.Controller.ProtocolVersion">
+            <summary>Accessors to protocol version (read only)</summary>
+        </member>
+        <member name="P:EcuDiagnose.Controller.CompatibilityNumber">
+            <summary>Accessors to current ecu compatibility
+            Read only</summary>
+        </member>
+        <member name="T:EcuDiagnose.EcuAdministration">
+            <summary>Administartion object for ECU</summary>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.#ctor">
+            <summary>Construtor</summary>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.Dispose(System.Boolean)">
+            <summary>Dispose of managed and native resouces</summary>
+            <param name="disposing">True if managed members should be disposed</param>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.Dispose">
+            <summary>Dispose of instantiable members</summary>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.Connect(System.String,System.Byte,System.Boolean)">
+            <summary>Start connection to ECU</summary>
+            <param name="portName">Name of port (starting with COM)</param>
+            <param name="Language">Language enumerator</param>
+            <param name="LocalTime">Flag if time displayed local (or UTC)</param>
+            <returns>True if connection is established</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.ApplySettings">
+            <summary>Apply changes settings</summary>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.Disconnect">
+            <summary>Disconnect ECU</summary>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.GetLastTimeStamp">
+            <summary>Get date time object of last communication time stamp</summary>
+            <returns>Date time object of last communication time stamp</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.SetTime(System.DateTime)">
+            <summary>Set ecu time</summary>
+            <param name="NewTime">Date time object of new ecu time</param>
+            <returns>True in success</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.GetVersionsString">
+            <summary>Get version string from ECU</summary>
+            <returns></returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.GetInfoText">
+            <summary>Get info text from ECU</summary>
+            <returns>Info text from ECU</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.GetNumberOfValues">
+            <summary>Get number of values from ECU</summary>
+            <returns>Number of values that can be read from ECU</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.GetValueRow(System.Byte,System.String@,System.String@,System.String@)">
+            <summary>Get strings of one value from ECU</summary>
+            <param name="rowNum">Position of value, or row number</param>
+            <param name="ValueName">String of value name</param>
+            <param name="FormattedValue">String of formatted value</param>
+            <param name="ValueUnit">String of value unit</param>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.ReadActualValues">
+            <summary>Read actual values from ECU</summary>
+            <returns></returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.IsValueHidden(System.Byte)">
+            <summary>Get hidden flag of one value</summary>
+            <param name="Position">Position or row number of required value</param>
+            <returns>True if value is hidden</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.IsValueDisplayed(System.Byte)">
+            <summary>Get display flag of one value</summary>
+            <param name="Position">Position or row number of required value</param>
+            <returns>True if value is displayed</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.ActualValuesSaveFile(System.String,System.Int32)">
+            <summary>Export actual values to a XML file</summary>
+            <param name="Filename">Target file name</param>
+            <param name="mFileExtensionIndex">Extension identifier</param>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.ActualValuesToggleUnit(System.Boolean)">
+            <summary>Toggle Alternative unit and original unit</summary>
+            <param name="NoAltUnit">True to use original unit, false for alternative unit (if available)</param>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.ReadErrorStack">
+            <summary>Read error stack from ECU</summary>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.ClearErrorStack">
+            <summary>Clear error stack</summary>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.GetErrorRow(System.UInt16,System.String@,System.String@,System.String@,System.String@,System.String@,System.String@,System.String@)">
+            <summary>Get strings of one error / event from ECU</summary>
+            <param name="rowNum">Position of error, or row number</param>
+            <param name="ErrorName">Name of error</param>
+            <param name="Event">String that indicates error or event</param>
+            <param name="ErrorState">State of error</param>
+            <param name="FirstA">String of first accurance</param>
+            <param name="LastA">String of last accurance</param>
+            <param name="UntilA">String ofaccuranced until</param>
+            <param name="Anzahl">Number of Accurances</param>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.GetBehaveRow(System.Byte,System.String@,System.String@)">
+            <summary>Get strings of one behave</summary>
+            <param name="Position">Position of behave</param>
+            <param name="Name">Name of behave</param>
+            <param name="State">State of behave</param>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.IsErrorOccured(System.Byte)">
+            <summary>Check if error is occured</summary>
+            <param name="ErrorNo">Identifier of error (error number)</param>
+            <returns>True if error is occured at least once</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.ErrorBehaveSaveFile(System.String,System.Int32)">
+            <summary>Export error stack and behaves to a XML file</summary>
+            <param name="Filename">Target file name</param>
+            <param name="mFileExtensionIndex">Extension identifier</param>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.ReadAcquisition(System.String,System.Int32)">
+            <summary>Start reading complete acquisition from ECU</summary>
+            <param name="FileName">File name of acquisition file</param>
+            <param name="FileExtensionIndex">Extension identifier</param>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.UploadConfig(System.String)">
+            <summary>Start uploading configuration file(s) to ecu</summary>
+            <returns>True if file upload thread is started successfully</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.CheckConfig">
+            <summary>Check if parameterset is uploaded successfully</summary>
+            <returns>True if upload was successfully</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.SetProductionData(System.UInt32,System.Int16)">
+            <summary>Set Production data (SN, date, temperature)</summary>
+            <param name="serialNumber">New serialnumber</param>
+            <param name="temperature">New temperature</param>
+            <returns>True in success</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.MasterReset">
+            <summary>Master reset ECU</summary>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.Reboot(HJS.ECU.Protocol.ProtocolBase.RebootMode)">
+            <summary>Reboot into normal mode</summary>
+            <param name="BootMode">Parameter for rebooting</param>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.ReadErrorRing(System.String,System.Int32)">
+            <summary>Start reading complete error ring from ECU</summary>
+            <param name="FileName">File name of error ring file</param>
+            <param name="FileExtensionIndex">Extension identifier</param>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.ReadRtc">
+            <summary>Read rtc data</summary>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.GetNumberOfVolatiles">
+            <summary>Get number of volatiles values</summary>
+            <returns>Number of volatiles values</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.GetVolatileValue(System.UInt16)">
+            <summary>Get volatile value as string</summary>
+            <param name="Position">Position of volatile value</param>
+            <returns>Volatile value as string</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.ReadEmpiricals">
+            <summary>Read empirical data</summary>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.GetEmpiricalGroupNames(System.String[]@)">
+            <summary>Get empirical group names</summary>
+            <param name="GroupNames">Position of group</param>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.GetNumberOfEmpiricalValues(System.UInt16)">
+            <summary>Get number of empirical values</summary>
+            <param name="Group">Position of group</param>
+            <returns>Number of values</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.GetEmpiricalValue(System.UInt16,System.UInt16)">
+            <summary>Get empirical value string</summary>
+            <param name="GroupPosition">Position of group</param>
+            <param name="ValuePosition">Position of value</param>
+            <returns>String with name and value</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.EmpiricalSaveFile(System.String,System.Int32)">
+            <summary>Export empirical values to a XML file</summary>
+            <param name="Filename">Target file name</param>
+            <param name="mFileExtensionIndex">Extension identifier</param>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.ReadDtc">
+            <summary>Read DTC from ECU</summary>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.GetDtcInfo">
+            <summary>Get DTC info text</summary>
+            <returns>DTC info text</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.GetDtcFF">
+            <summary>Get DTC freeze frame text</summary>
+            <returns>DTC freeze frame text</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.GetDtcDerateFlags">
+            <summary>Get DTC derating and flags text</summary>
+            <returns>DTC derating and flags text</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.GetDtcItemCount">
+            <summary>Get number of stack items</summary>
+            <returns>Number of stack items</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.GetDtcItem(System.Byte,System.String@,System.String@,System.String@,System.String@,System.String@,System.String@,System.String@,System.String@)">
+            <summary>Get stack item strings</summary>
+            <param name="Position">Position of stack item</param>
+            <param name="strFreeWarmUps">Free warm ups of stack item</param>
+            <param name="strErrorNumber">Error number of stack item</param>
+            <param name="strOccuranceCounter">Occurance counter of stack item</param>
+            <param name="strPending">Pending flag of stack item</param>
+            <param name="strActive">Active flag of stack item</param>
+            <param name="strPrevActive">Previously active flag of stack item</param>
+            <param name="strSPN">Suspect parameter number of stack item</param>
+            <param name="strFMI">Failure mode identifier of stack item</param>
+            <returns>True if stack item strings are set</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.SetOrder(HJS.ECU.Diagnostics.Diag.Orders,System.UInt16)">
+            <summary>Send order to ecu</summary>
+            <param name="OrderId">Order enumerator</param>
+            <param name="OrderValue">Value of order</param>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.DirectOrder(System.Byte,System.UInt16)">
+            <summary>Send direct order to ECU</summary>
+            <param name="OrderByte">Order byte</param>
+            <param name="Parameter">Parameter</param>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.SaveReadDataFile(System.String)">
+            <summary>Save read data block file</summary>
+            <param name="Filename">Filename</param>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.SaveAllFiles(System.String)">
+            <summary>Save all files as XML files to certain path</summary>
+            <param name="Path">Path to files to save</param>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.ReadConfig(System.String)">
+            <summary>Read a parameter set file from ECU</summary>
+            <param name="FileName">File name of parameterset</param>
+            <returns>True if file is uploaded successfully</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.UploadCfgFile(System.String)">
+            <summary>Upload a config file to ECU </summary>
+            <param name="FileName">File name of config</param>
+            <returns>True if file is uploaded successfully</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.UploadDatFile(System.String)">
+            <summary>Upload a data map file to ECU </summary>
+            <param name="FileName">File name of data map</param>
+            <returns>True if file is uploaded successfully</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.UploadLngFile(System.String)">
+            <summary>Upload a language file to ECU </summary>
+            <param name="FileName">File name of language</param>
+            <returns>True if file is uploaded successfully</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.ReadUpdatables">
+            <summary>Read updatable empirical data</summary>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.GetUpdatable(System.Int32)">
+            <summary>Get string of updatable</summary>
+            <param name="Position">Position of updatable value</param>
+            <returns>String of udatable value</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.SetUpdatable(System.Int32,System.Byte[])">
+            <summary>Set updatable empirical value</summary>
+            <param name="Position">Position of updatable empirical value</param>
+            <param name="Data">Source byte array</param>
+            <returns>True on success</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.ReadAvailableLanguages">
+            <summary>Read list of available languages</summary>
+            <returns>List of languages as strings</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.ReadActiveTaskList">
+            <summary>Read list of active tasks</summary>
+            <returns>List of active tasks as strings</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.GetSerialNumber">
+            <summary>Get serial number from ECU</summary>
+            <returns>Serial number of currently connected ECU</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.GetEcuTemperatureOffset">
+            <summary>Get temperature offset from production data block</summary>
+            <returns>Temperature offset of currently connected ECU</returns>
+        </member>
+        <member name="M:EcuDiagnose.EcuAdministration.ReadSbcRegister">
+            <summary>Read system basis chip registers</summary>
+            <returns>Value of SBC registers</returns>
+        </member>
+        <member name="P:EcuDiagnose.EcuAdministration.RawFileName">
+            <summary>Accessors to raw file name w/o extension</summary>
+        </member>
+        <member name="P:EcuDiagnose.EcuAdministration.ProtocolVersion">
+            <summary>Accessors to protocol version
+            Read only</summary>
+        </member>
+        <member name="P:EcuDiagnose.EcuAdministration.CompatibilityNumber">
+            <summary>Accessors to current ecu compatibility
+            Read only</summary>
+        </member>
+        <member name="P:EcuDiagnose.EcuAdministration.ProgressDelegate">
+            <summary>Accessors to delegated report of process</summary>
+        </member>
+        <member name="P:EcuDiagnose.EcuAdministration.StatusDelegate">
+            <summary>Accessors to delegated report of status</summary>
+        </member>
+        <member name="T:EcuDiagnose.EcuAdministration.ProgressDelegateType">
+            <summary>Delegated function to report progress to GUI</summary>
+            <param name="percentage">Progress</param>
+            <returns>Always returns true</returns>
+        </member>
+        <member name="T:EcuDiagnose.EcuAdministration.StatusDelegateType">
+            <summary>Delegated function to report status to GUI</summary>
+            <param name="message">Status message</param>
+            <returns>Always returns true</returns>
+        </member>
+        <member name="T:EcuDiagnose.Forms.FrameForm">
+            <summary>Main form object</summary>
+        </member>
+        <member name="M:EcuDiagnose.Forms.FrameForm.#ctor">
+            <summary>Constructor</summary>
+        </member>
+        <member name="M:EcuDiagnose.Forms.FrameForm.ReportProgress(System.Int32)">
+            <summary>Delegated function to report progress to GUI</summary>
+            <param name="percentage">Progress</param>
+        </member>
+        <member name="M:EcuDiagnose.Forms.FrameForm.ReportStatus(System.String)">
+            <summary>Delegated function to report status to GUI</summary>
+            <param name="message">Status message</param>
+        </member>
+        <member name="F:EcuDiagnose.Forms.FrameForm.components">
+            <summary>
+            Erforderliche Designervariable.
+            </summary>
+        </member>
+        <member name="M:EcuDiagnose.Forms.FrameForm.Dispose(System.Boolean)">
+            <summary>
+            Verwendete Ressourcen bereinigen.
+            </summary>
+            <param name="disposing">True, wenn verwaltete Ressourcen gelöscht werden sollen; andernfalls False.</param>
+        </member>
+        <member name="M:EcuDiagnose.Forms.FrameForm.InitializeComponent">
+            <summary>
+            Erforderliche Methode für die Designerunterstützung.
+            Der Inhalt der Methode darf nicht mit dem Code-Editor geändert werden.
+            </summary>
+        </member>
+        <member name="P:EcuDiagnose.Forms.FrameForm.TheController">
+            <summary>Accessors to controller object</summary>
+        </member>
+        <member name="T:EcuDiagnose.Forms.OptionsForm">
+            <summary>Options dialog form</summary>
+        </member>
+        <member name="M:EcuDiagnose.Forms.OptionsForm.#ctor">
+            <summary>Default constructor</summary>
+        </member>
+        <member name="F:EcuDiagnose.Forms.OptionsForm.components">
+            <summary>
+            Erforderliche Designervariable.
+            </summary>
+        </member>
+        <member name="M:EcuDiagnose.Forms.OptionsForm.Dispose(System.Boolean)">
+            <summary>
+            Verwendete Ressourcen bereinigen.
+            </summary>
+            <param name="disposing">True, wenn verwaltete Ressourcen gelöscht werden sollen; andernfalls False.</param>
+        </member>
+        <member name="M:EcuDiagnose.Forms.OptionsForm.InitializeComponent">
+            <summary>
+            Erforderliche Methode für die Designerunterstützung.
+            Der Inhalt der Methode darf nicht mit dem Code-Editor geändert werden.
+            </summary>
+        </member>
+        <member name="M:EcuDiagnose.Program.Main">
+            <summary>
+            Der Haupteinstiegspunkt für die Anwendung.
+            </summary>
+        </member>
+        <member name="T:EcuDiagnose.Properties.Resources">
+            <summary>
+              Eine stark typisierte Ressourcenklasse zum Suchen von lokalisierten Zeichenfolgen usw.
+            </summary>
+        </member>
+        <member name="P:EcuDiagnose.Properties.Resources.ResourceManager">
+            <summary>
+              Gibt die zwischengespeicherte ResourceManager-Instanz zurück, die von dieser Klasse verwendet wird.
+            </summary>
+        </member>
+        <member name="P:EcuDiagnose.Properties.Resources.Culture">
+            <summary>
+              Überschreibt die CurrentUICulture-Eigenschaft des aktuellen Threads für alle
+              Ressourcenzuordnungen, die diese stark typisierte Ressourcenklasse verwenden.
+            </summary>
+        </member>
+        <member name="P:EcuDiagnose.Properties.Resources.clock">
+            <summary>
+              Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:EcuDiagnose.Properties.Resources.connected">
+            <summary>
+              Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:EcuDiagnose.Properties.Resources.edit_bomb">
+            <summary>
+              Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:EcuDiagnose.Properties.Resources.empty">
+            <summary>
+              Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:EcuDiagnose.Properties.Resources.Heater">
+            <summary>
+              Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:EcuDiagnose.Properties.Resources.PropertiesHS">
+            <summary>
+              Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:EcuDiagnose.Properties.Resources.Refresh">
+            <summary>
+              Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:EcuDiagnose.Properties.Resources.Repeat">
+            <summary>
+              Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:EcuDiagnose.Properties.Resources.Repeat_plus">
+            <summary>
+              Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:EcuDiagnose.Properties.Resources.Repeat_stop">
+            <summary>
+              Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:EcuDiagnose.Properties.Resources.Run">
+            <summary>
+              Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+            </summary>
+        </member>
+        <member name="P:EcuDiagnose.Properties.Resources.Stop">
+            <summary>
+              Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+            </summary>
+        </member>
+    </members>
+</doc>

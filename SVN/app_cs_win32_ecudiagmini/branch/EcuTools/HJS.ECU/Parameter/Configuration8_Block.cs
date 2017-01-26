@@ -1,0 +1,290 @@
+﻿/*
+ * Object: HJS.ECU.Parameter.Configuration8_Block
+ * Description: Configuration parameter block compatibility 8
+ * 
+ * $LastChangedDate: 2015-02-06 14:17:22 +0100 (Fr, 06 Feb 2015) $
+ * $LastChangedRevision: 85 $
+ * $LastChangedBy: ksi $
+ * $HeadURL: http://menden22/svn/devel/electronic/app_cs_win32_ecudiagmini/branch/EcuTools/HJS.ECU/Parameter/Configuration8_Block.cs $
+ * 
+ * LastReviewDate: 
+ * LastReviewRevision: 
+ * LastReviewBy: 
+ */
+using System;
+using System.Collections.Generic;
+
+namespace HJS.ECU.Parameter
+{
+    /// <summary>Configuration parameter block compatibility 8 class</summary>
+    public partial class Configuration8_Block : ConfigurationBlock
+    {
+        /// <summary>Default constructor</summary>
+        public Configuration8_Block()
+        {
+            Version = 8;
+            DataSize = 4090;
+        }
+
+        /// <summary>Import from base block</summary>
+        /// <param name="Source">Source block</param>
+        /// <param name="KeepVersion">Flag if Target version should remain</param>
+        /// <returns></returns>
+        public override ReturnValue Import(ref Block Source, bool KeepVersion)
+        {
+            ReturnValue _ret = ReturnValue.NoError;
+            byte b = 0;
+            //Import block header
+            if (Source.Type != Type)
+            {
+                _ret = ReturnValue.BlockNotFound;
+            }
+            else
+            {
+                if (KeepVersion)
+                {
+                    if (Source.Version != Version)
+                    {
+                        _ret = ReturnValue.VersionMismatch;
+                    }
+                    else
+                    {
+                        Source.GetData(out mBlockData);
+                        if (DataSize != (UInt16)mBlockData.Length)
+                        {
+                            _ret = ReturnValue.SizeMismatch;
+                        }
+                    }
+                }
+                else
+                {
+                    Version = Source.Version;
+                    Source.GetData(out mBlockData);
+                    if (DataSize != (UInt16)mBlockData.Length)
+                    {
+                        _ret = ReturnValue.SizeMismatch;
+                    }
+                }
+                mChecksum = Source.Checksum;
+            }
+            if (_ret == ReturnValue.NoError && mBlockData != null)
+            {
+                //Import configuration header
+                mTaskAnzahl = mBlockData[0];
+                NumberOfUsedDatamaps = mBlockData[1];
+                VersionT ver;
+                ver.Hauptversion = (UInt16)(mBlockData[2] + (mBlockData[3] * 256));
+                ver.Nebenversion = mBlockData[4];
+                ver.Revision = mBlockData[5];
+                ConfigVersion = ver;
+                AbwaertsVersion = mBlockData[6];
+                SoftwareType = mBlockData[7];
+                PasswordLevel = mBlockData[8];
+                //Import task arrays
+                TaskVector[] tvt = new TaskVector[25];
+                TaskError[,] tet = new TaskError[25, 7];
+                for (int i = 0; i < 25; i++)
+                {
+                    tvt[i].Tasknummer = (TaskIdentifier)mBlockData[9 + (i * 3)];
+                    tvt[i].Offset = BitConverter.ToUInt16(mBlockData, 10 + (i * 3));
+                    b = mBlockData[84 + (i * 7)];
+                    tet[i, 0].ErrNo = (byte)(b / 4);
+                    tet[i, 0].Ring = (b & 0x01) > 0;
+                    tet[i, 0].reserve = (b & 0x02) > 1;
+                    b = mBlockData[85 + (i * 7)];
+                    tet[i, 1].ErrNo = (byte)(b / 4);
+                    tet[i, 1].Ring = (b & 0x01) > 0;
+                    tet[i, 1].reserve = (b & 0x02) > 1;
+                    b = mBlockData[86 + (i * 7)];
+                    tet[i, 2].ErrNo = (byte)(b / 4);
+                    tet[i, 2].Ring = (b & 0x01) > 0;
+                    tet[i, 2].reserve = (b & 0x02) > 1;
+                    b = mBlockData[87 + (i * 7)];
+                    tet[i, 3].ErrNo = (byte)(b / 4);
+                    tet[i, 3].Ring = (b & 0x01) > 0;
+                    tet[i, 3].reserve = (b & 0x02) > 1;
+                    b = mBlockData[88 + (i * 7)];
+                    tet[i, 4].ErrNo = (byte)(b / 4);
+                    tet[i, 4].Ring = (b & 0x01) > 0;
+                    tet[i, 4].reserve = (b & 0x02) > 1;
+                    b = mBlockData[89 + (i * 7)];
+                    tet[i, 5].ErrNo = (byte)(b / 4);
+                    tet[i, 5].Ring = (b & 0x01) > 0;
+                    tet[i, 5].reserve = (b & 0x02) > 1;
+                    b = mBlockData[90 + (i * 7)];
+                    tet[i, 6].ErrNo = (byte)(b / 4);
+                    tet[i, 6].Ring = (b & 0x01) > 0;
+                    tet[i, 6].reserve = (b & 0x02) > 1;
+                }
+                SetTaskVectorTable(tvt);
+                SetTaskErrorTable(tet);
+                //Import initial values
+                InitValueImport();
+
+                //Import tasks
+                maTask = new TaskConfiguration[mTaskAnzahl];
+                for (int i = 0; i < mTaskAnzahl; i++)
+                {
+                    maTask[i] = new TaskConfiguration(GetTaskIdentifier(i));
+                    if (!maTask[i].Import8(GetTaskOffset(i), ref mBlockData))
+                    {
+                        _ret = ReturnValue.SizeMismatch;
+                    }
+                }
+            }
+            return _ret;
+        }
+
+        /// <summary>Update byte array
+        /// Data from header strucutres, except dynamic structures are parsed back into the byte array</summary>
+        public override void Parse()
+        {
+            // Configuration header
+            mBlockData[0] = mTaskAnzahl;
+            mBlockData[1] = NumberOfUsedDatamaps;
+            mBlockData[2] = (byte)(ConfigVersion.Hauptversion % 256);
+            mBlockData[3] = (byte)(ConfigVersion.Hauptversion / 256);
+            mBlockData[4] = ConfigVersion.Nebenversion;
+            mBlockData[5] = ConfigVersion.Revision;
+            mBlockData[6] = AbwaertsVersion;
+            mBlockData[7] = SoftwareType;
+            mBlockData[8] = PasswordLevel;
+
+            // Task arrays
+            TaskVector[] tvt = new TaskVector[25];
+            TaskError[,] tet = new TaskError[25, 7];
+            for (int i = 0; i < 25; i++)
+            {
+                mBlockData[9 + (i * 3)] = (byte)(GetTaskIdentifier(i));
+                mBlockData[10 + (i * 3)] = (byte)(GetTaskOffset(i) % 256);
+                mBlockData[11 + (i * 3)] = (byte)(GetTaskOffset(i) / 256);
+                mBlockData[84 + (i * 7)] = (byte)((GetTaskErrorNumber(i, 0) * 4) + (GetTaskErrorRingFlag(i, 0) ? 1 : 0));
+                mBlockData[85 + (i * 7)] = (byte)((GetTaskErrorNumber(i, 1) * 4) + (GetTaskErrorRingFlag(i, 1) ? 1 : 0));
+                mBlockData[86 + (i * 7)] = (byte)((GetTaskErrorNumber(i, 2) * 4) + (GetTaskErrorRingFlag(i, 2) ? 1 : 0));
+                mBlockData[87 + (i * 7)] = (byte)((GetTaskErrorNumber(i, 3) * 4) + (GetTaskErrorRingFlag(i, 3) ? 1 : 0));
+                mBlockData[88 + (i * 7)] = (byte)((GetTaskErrorNumber(i, 4) * 4) + (GetTaskErrorRingFlag(i, 4) ? 1 : 0));
+                mBlockData[89 + (i * 7)] = (byte)((GetTaskErrorNumber(i, 5) * 4) + (GetTaskErrorRingFlag(i, 5) ? 1 : 0));
+                mBlockData[90 + (i * 7)] = (byte)((GetTaskErrorNumber(i, 6) * 4) + (GetTaskErrorRingFlag(i, 6) ? 1 : 0));
+            }
+            GenerateChecksum();
+        }
+
+        /// <summary>Check task starting offsets</summary>
+        /// <param name="ResultString">String of result</param>
+        /// <param name="UsedBytes">Number of used bytes</param>
+        /// <returns>True if check was successfully</returns>
+        public override bool CheckTaskOffset(out String ResultString, out UInt32 UsedBytes)
+        {
+            int[] ucaTaskPos = new int[mTaskAnzahl];
+            int merker;
+            UInt32 GapBytes = 0;
+            UInt32 OverlappingBytes = 0;
+            UInt32 TaskOffset = 0;
+            UInt32 TaskBytes = 0;
+            UsedBytes = 6 + 9 + 75 + 175 + 50;
+            // Block header(6) Verionen+Anzahl(9), TVT(25*3=75)
+            // + taskerrors(25*7 = 175) + initvalues(50)
+
+            for (int i = 0; i < mTaskAnzahl; i++) ucaTaskPos[i] = i; // ursprungsreihenfolge
+            // reihenfolge nach aufsteigenden offsets sortieren
+            for (int j = 0; j < (mTaskAnzahl - 1); j++)
+                for (int i = 0; i < (mTaskAnzahl - 1); i++)
+                {
+                    if (GetTaskOffset(i) == 0)
+                    {
+                        ResultString = String.Format("Task mit Offset 0 wurde gestartet ({0})", GetTaskIdentifier(i));
+                        return false;
+                    } if (GetTaskOffset(ucaTaskPos[i]) > GetTaskOffset(ucaTaskPos[i + 1]))
+                    {
+                        merker = ucaTaskPos[i];
+                        ucaTaskPos[i] = ucaTaskPos[i + 1];
+                        ucaTaskPos[i + 1] = merker;
+                    }
+                }
+            // Luecken, ueberlappungen suchen
+            for (int TaskPos = 0; TaskPos < mTaskAnzahl; TaskPos++)
+            {
+                TaskOffset = GetTaskOffset(ucaTaskPos[TaskPos]);
+                TaskBytes = maTask[ucaTaskPos[TaskPos]].GetByteUsage(Version);
+                if (TaskOffset > UsedBytes)
+                {
+                    // gap gefunden
+                    GapBytes += TaskOffset - UsedBytes;
+                    UsedBytes = TaskOffset;
+                }
+                if (TaskOffset < UsedBytes)
+                {
+                    // overlap gefunden
+                    OverlappingBytes += UsedBytes - TaskOffset;
+                }
+                UsedBytes += TaskBytes;
+            }
+
+            ResultString = "Gap " + GapBytes + " / Overlapping " + OverlappingBytes;
+            return (OverlappingBytes == 0);
+        }
+
+        /// <summary>Get fixed task offset</summary>
+        /// <param name="task">Identifier of task</param>
+        /// <returns>Offset according HSL block structure</returns>
+        public override UInt16 GetFixedOffset(TaskIdentifier task)
+        {
+            switch (task)
+            {
+                case TaskIdentifier.taskIo:
+                    return 0x30B;
+                case TaskIdentifier.taskPreDiagnose:
+                    return 0x354;
+                case TaskIdentifier.taskPostDiagnose:
+                    return 0x35C;
+                case TaskIdentifier.taskKommunikation:
+                    return 0x4C1;
+                case TaskIdentifier.taskCanCom:
+                    return 0x4C9;
+                case TaskIdentifier.taskDosieren:
+                    return 0x564;
+                case TaskIdentifier.taskTurnspeed:
+                    return 0x58D;
+                case TaskIdentifier.taskTankgeber:
+                    return 0x59B;
+                case TaskIdentifier.taskAgr:
+                    return 0x5B3;
+                case TaskIdentifier.taskCanIn:
+                    return 0x5D3;
+                case TaskIdentifier.taskHeizen:
+                    return 0x673;
+                case TaskIdentifier.taskAcquisition:
+                    return 0x689;
+                case TaskIdentifier.taskBeladMittel:
+                    return 0x6A5;
+                case TaskIdentifier.taskRegenerieren:
+                    return 0x6C0;
+                case TaskIdentifier.taskAdditivierung:
+                    return 0x6E4;
+                case TaskIdentifier.taskVertWatch:
+                    return 0x708;
+                case TaskIdentifier.taskBeladPro:
+                    return 0x710;
+                case TaskIdentifier.taskDrivePattern:
+                    return 0x735;
+                case TaskIdentifier.taskSaeComm:
+                    return 0x73E;
+                case TaskIdentifier.taskAplSae:
+                    return 0x74A;
+                case TaskIdentifier.taskBeladCRT:
+                    return 0x752;
+                case TaskIdentifier.taskBeladLuftmasse:
+                    return 0x785;
+                case TaskIdentifier.taskBeladKennfeld:
+                    return 0x7A3;
+                case TaskIdentifier.taskMassAirFlow:
+                    return 0x7F2;
+                case TaskIdentifier.taskGrundfos:
+                    return 0x82B;
+                case TaskIdentifier.taskInvalid:
+                default:
+                    return 0xFFFF;
+            }
+        }
+    }
+}

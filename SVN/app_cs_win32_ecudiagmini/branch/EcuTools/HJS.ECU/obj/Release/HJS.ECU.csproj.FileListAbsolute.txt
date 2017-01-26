@@ -1,0 +1,4 @@
+C:\Users\mob\Desktop\MOB\EcuTools\HJS.ECU\bin\Release\HJS.ECU.dll
+C:\Users\mob\Desktop\MOB\EcuTools\HJS.ECU\bin\Release\HJS.ECU.pdb
+C:\Users\mob\Desktop\MOB\EcuTools\HJS.ECU\obj\Release\HJS.ECU.dll
+C:\Users\mob\Desktop\MOB\EcuTools\HJS.ECU\obj\Release\HJS.ECU.pdb

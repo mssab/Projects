@@ -1,0 +1,296 @@
+/*
+ * Object: HJS.ECU.Diag.TroubleCodes
+ * Description: Object of trouble code stack
+ * 
+ * $LastChangedDate: 2013-07-30 14:47:32 +0200 (Di, 30 Jul 2013) $
+ * $LastChangedRevision: 23 $
+ * $LastChangedBy: ksi $
+ * $HeadURL: http://menden22/svn/devel/electronic/app_cs_win32_ecudiagmini/tags/Version_1_3_1/lib_cs_win32_hjsecu/TroubleCodes.cs $
+ * 
+ * LastReviewDate: 
+ * LastReviewRevision: 
+ * LastReviewBy: 
+ */
+using System;
+
+namespace HJS.ECU.Diag
+{
+    /// <summary>
+    /// Diagnostic trouble codes stack item
+    /// </summary>
+    public class TroubleCodeItem
+    {
+        /// <summary>
+        /// Number of warmups without this error
+        /// </summary>
+        public byte FreeWarmUps;
+        /// <summary>
+        /// Identifier or DTC number of error
+        /// </summary>
+        public byte ErrorNumber;
+        /// <summary>
+        /// Occurance counter
+        /// </summary>
+        public byte OccuranceCounter;
+        /// <summary>
+        /// This error code is currently pending. that means it appears the current or last driving cycle.
+        /// </summary>
+        public byte isPending;
+        /// <summary>
+        /// This error code is currently active. that means the errror appeared in more than one consecutive driving cycle and the error is currently present.
+        /// </summary>
+        public byte isActive;
+        /// <summary>
+        /// This error code is currently active. that means the errror appeared in more than one consecutive driving cycle. The error is currently not present, but the error has not been deleted at this time.
+        /// </summary>
+        public byte isPrevActive;
+        /// <summary>
+        /// SPN matching to error
+        /// </summary>
+        public UInt32 SuspectParameterNumber;
+        /// <summary>
+        /// FMI matching to error
+        /// </summary>
+        public byte FailureModeIdentifier;
+    }
+
+    /// <summary>
+    /// Diagnostic trouble codes (DTC)
+    /// </summary>
+    public class TroubleCodes
+    {
+        private UInt16 mWarmUpNumberSinceCleared;
+        private UInt32 mTimeOfCleared;
+        private UInt32 mStartTimeMil;
+        private TroubleCodeItem[] mStack = new TroubleCodeItem[64];
+        private byte mFreezeFrameErrorNumber;
+        private UInt16 mFreezeFrameRpm;
+        private byte mFreezeFrameEngineLoad;
+        private byte mFreezeFrameCoolantTemperature;
+        private UInt32[] mSuspectParameterNumber;
+        private byte[] mFailureModeIdentifier;
+        private UInt16 mDeratingLevel;
+        private UInt16 mDtcFlags;
+
+        /// <summary>
+        /// Info string
+        /// </summary>
+        public string Info
+        {
+            get
+            {
+                return String.Format("Warmups since Cleared {0}; Time of Cleares {1}; Start time MIL {2}",
+                    mWarmUpNumberSinceCleared, mTimeOfCleared, mStartTimeMil);
+            }
+        }
+
+        /// <summary>
+        /// Freeze frame data
+        /// </summary>
+        public string FreezeFrame
+        {
+            get
+            {
+                return String.Format("Error number {0}; Rpm {1}; EngineLoad {2}; CoolantTemperature {3}",
+                    mFreezeFrameErrorNumber, mFreezeFrameRpm,
+                    mFreezeFrameEngineLoad, mFreezeFrameCoolantTemperature);
+            }
+        }
+
+        /// <summary>Deratinglevel and Flags for DM1</summary>
+        public string DeratingAndFlags
+        {
+            get
+            {
+                return String.Format("Deratinglevel: {0}; DM1-Flags 0x{1:X04}",
+                    mDeratingLevel, mDtcFlags/*.ToString("X")*/);
+            }
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public TroubleCodes()
+        {
+            mSuspectParameterNumber = new UInt32[0];
+            mFailureModeIdentifier = new byte[0];
+        }
+
+        /// <summary>
+        /// Read DTC table
+        /// </summary>
+        /// <param name="CurrentProtocol">Reference to connected ECU protocol</param>
+        public bool ReadTroubleCodeTable(ref HJS.ECU.Protocol.ProtocolBase CurrentProtocol)
+        {
+            byte[] _buffer;
+            bool ret = false;
+            ReturnValue ComErr = CurrentProtocol.ReadDtcTable(out _buffer);
+            if (ComErr == ReturnValue.NoError)
+            {
+                mSuspectParameterNumber = new UInt32[_buffer.Length / 5];
+                mFailureModeIdentifier = new byte[_buffer.Length / 5];
+                for (int i = 0; i < _buffer.Length; i = i + 5)
+                {
+                    mSuspectParameterNumber[i / 5] = BitConverter.ToUInt32(_buffer, i);
+                    mFailureModeIdentifier[i / 5] = _buffer[i + 4];
+                }
+                ret = true;
+            }
+            else
+            {
+                mSuspectParameterNumber = new UInt32[0];
+                mFailureModeIdentifier = new byte[0];
+            }
+            return ret;
+        }
+
+        /// <summary>
+        /// Get number of stack items
+        /// </summary>
+        /// <returns></returns>
+        public byte GetStackItemCount()
+        {
+            if (mStack == null)
+            {
+                return 0;
+            }
+            else
+            {
+                return (byte)mStack.Length;
+            }
+        }
+
+        /// <summary>
+        /// Get stack item strings
+        /// </summary>
+        /// <param name="Position">Position of stack item</param>
+        /// <param name="strFreeWarmUps">Free warm ups of stack item</param>
+        /// <param name="strErrorNumber">Error number of stack item</param>
+        /// <param name="strOccuranceCounter">Occurance counter of stack item</param>
+        /// <param name="strPending">Pending flag of stack item</param>
+        /// <param name="strActive">Active flag of stack item</param>
+        /// <param name="strPrevActive">Previously active flag of stack item</param>
+        /// <param name="strSPN">Suspect parameter number of stack item</param>
+        /// <param name="strFMI">Failure mode identifier of stack item</param>
+        /// <returns>True if stack item strings are set</returns>
+        public bool GetStackItem(byte Position, out string strFreeWarmUps, out string strErrorNumber,
+            out string strOccuranceCounter, out string strPending, out string strActive,
+            out string strPrevActive, out string strSPN, out string strFMI)
+        {
+            if (mStack == null)
+            {
+                strFreeWarmUps = "";
+                strErrorNumber = "";
+                strOccuranceCounter = "";
+                strPending = "";
+                strActive = "";
+                strPrevActive = "";
+                strSPN = "";
+                strFMI = "";
+                return false;
+            }
+            else
+            {
+                if (mStack.Length < Position)
+                {
+                    strFreeWarmUps = "";
+                    strErrorNumber = "";
+                    strOccuranceCounter = "";
+                    strPending = "";
+                    strActive = "";
+                    strPrevActive = "";
+                    strSPN = "";
+                    strFMI = "";
+                    return false;
+                }
+                else
+                {
+                    strFreeWarmUps = mStack[Position].FreeWarmUps.ToString();
+                    strErrorNumber = mStack[Position].ErrorNumber.ToString();
+                    strOccuranceCounter = mStack[Position].OccuranceCounter.ToString();
+                    strPending = mStack[Position].isPending.ToString();
+                    strActive = (mStack[Position].isActive != 0).ToString();
+                    strPrevActive = (mStack[Position].isPrevActive != 0).ToString();
+                    strSPN = mStack[Position].SuspectParameterNumber.ToString();
+                    strFMI = mStack[Position].FailureModeIdentifier.ToString();
+                    return true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Read data from byte array
+        /// </summary>
+        /// <param name="protocol">Reference to ecu protocol</param>
+        /// <returns>True on success</returns>
+        public ReturnValue Read(ref Protocol.ProtocolBase protocol)
+        {
+            byte[] buffer;
+            ReturnValue ret = protocol.ReadDtc(out buffer);
+            if (buffer != null)
+            {
+                if ((buffer.Length != 271) && (buffer.Length != 275))
+                {
+                    ret = ReturnValue.SizeMismatch;
+                }
+                else
+                {
+                    mWarmUpNumberSinceCleared = BitConverter.ToUInt16(buffer, 0);
+                    mTimeOfCleared = BitConverter.ToUInt32(buffer, 2);
+                    mStartTimeMil = BitConverter.ToUInt32(buffer, 6);
+                    //mStack;
+                    for (int i = 0; i < mStack.Length; i++)
+                    {
+                        mStack[i] = new TroubleCodeItem();
+                        mStack[i].FreeWarmUps = (byte)(buffer[10 + 0 + (i * 4)] & 0x7F);
+                        mStack[i].ErrorNumber = (byte)(buffer[10 + 1 + (i * 4)]);
+                        mStack[i].OccuranceCounter = (byte)(buffer[10 + 2 + (i * 4)]);
+                        mStack[i].isPending = (byte)((buffer[10 + 3 + (i * 4)] & 0xC0) / 64);
+                        mStack[i].isActive = (byte)((buffer[10 + 3 + (i * 4)] & 0x20) / 32);
+                        mStack[i].isPrevActive = (byte)((buffer[10 + 3 + (i * 4)] & 0x10) / 16);
+                        if (mStack[i].ErrorNumber != 0)
+                        {
+                            if (mSuspectParameterNumber.Length >= mStack[i].ErrorNumber)
+                            {
+                                mStack[i].SuspectParameterNumber = mSuspectParameterNumber[mStack[i].ErrorNumber];
+                            }
+                            else
+                            {
+                                mStack[i].SuspectParameterNumber = 0;
+                            }
+                            if (mFailureModeIdentifier.Length >= mStack[i].ErrorNumber)
+                            {
+                                mStack[i].FailureModeIdentifier = mFailureModeIdentifier[mStack[i].ErrorNumber];
+                            }
+                            else
+                            {
+                                mStack[i].FailureModeIdentifier = 0;
+                            }
+                        }
+                        else
+                        {
+                            mStack[i].SuspectParameterNumber = 0;
+                            mStack[i].FailureModeIdentifier = 0;
+                        }
+                    }
+
+                    mFreezeFrameErrorNumber = buffer[266];
+                    mFreezeFrameRpm = BitConverter.ToUInt16(buffer, 267);
+                    mFreezeFrameEngineLoad = buffer[269];
+                    mFreezeFrameCoolantTemperature = buffer[270];
+                    if (buffer.Length > 273)
+                    {
+                        mDeratingLevel = BitConverter.ToUInt16(buffer, 271);
+                        mDtcFlags = BitConverter.ToUInt16(buffer, 273);
+                    }
+                    else
+                    {
+                        mDeratingLevel = 0;
+                        mDtcFlags = 0;
+                    }
+                }
+            }
+            return ret;
+        }
+    }
+}

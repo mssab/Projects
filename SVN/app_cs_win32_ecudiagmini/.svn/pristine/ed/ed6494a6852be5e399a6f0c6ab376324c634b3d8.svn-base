@@ -1,0 +1,59 @@
+/*
+ * Object: HJS.ECU.Parameter.TaskConfiguration.Can2Com
+ * Description: task configuration for Can2Com
+ * 
+ * $LastChangedDate$
+ * $LastChangedRevision$
+ * $LastChangedBy$
+ * $HeadURL$
+ * 
+ * LastReviewDate: 
+ * LastReviewRevision: 
+ * LastReviewBy: 
+ */
+using System;
+
+namespace HJS.ECU.Parameter
+{
+    public partial class TaskConfiguration
+    {
+        private UInt16 SizeCan2Com9() { return 10; }
+        private bool ImportCan2Com9(UInt16 Offset, ref byte[] Data)
+        {
+            UInt16 ItemPosition = 0;
+            UInt16 DataPosition = 0;
+            if (Offset > 6)
+            {
+                DataPosition = (UInt16)(Offset - 6);   // block header = 6 abziehen
+            }
+            else { return false; }
+            mData = Data;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("TaskCfg->uiCRC", TaskDataType.type_hex_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("TaskCfg->uiExpire", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("TaskCfg->uiStacksize", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("TaskCfg->ucPrio", TaskDataType.type_uint_8, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 1); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("TaskCfg->ucTimeout", TaskDataType.type_uint_8, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 1); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("uiErrorTimeLimit", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            return ((DataPosition + 6) == (Offset + SizeCan2Com9()));
+        }
+	}
+}

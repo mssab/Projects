@@ -1,0 +1,152 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{CD746A01-D1B1-475B-B2CC-0F2179AC733C}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>HJS.ECU</RootNamespace>
+    <AssemblyName>HJS.ECU</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Debug\HJS.ECU.XML</DocumentationFile>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AuthorBlock.cs" />
+    <Compile Include="BinaryCodedDecimals.cs" />
+    <Compile Include="Block.cs" />
+    <Compile Include="BlockFile.cs" />
+    <Compile Include="Diagnostics\Acquisition.cs" />
+    <Compile Include="Diagnostics\ActualValues.cs" />
+    <Compile Include="Diagnostics\Diagnostics.cs" />
+    <Compile Include="Diagnostics\ErrorRing.cs" />
+    <Compile Include="Diagnostics\ErrorStack.cs" />
+    <Compile Include="Diagnostics\TroubleCodes.cs" />
+    <Compile Include="DigitalInfoBlock.cs" />
+    <Compile Include="EmpiricalDataBlock.cs" />
+    <Compile Include="Firmware.cs" />
+    <Compile Include="InternalDataItem.cs" />
+    <Compile Include="LanguageBlock.cs" />
+    <Compile Include="ListViewNF.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Parameter\Configuration10_Block.cs" />
+    <Compile Include="Parameter\Configuration10_Block.InitialValues.cs" />
+    <Compile Include="Parameter\Configuration10_Block.SecondCan.cs" />
+    <Compile Include="Parameter\Configuration8_Block.cs" />
+    <Compile Include="Parameter\Configuration8_Block.SecondCan.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Parameter\Configuration9_Block.cs" />
+    <Compile Include="Parameter\Configuration9_Block.InitialValues.cs" />
+    <Compile Include="Parameter\Configuration9_Block.SecondCan.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Parameter\ConfigurationBlock.cs" />
+    <Compile Include="Parameter\DataMap.cs" />
+    <Compile Include="Parameter\Datamap2_Block.cs" />
+    <Compile Include="Parameter\Configuration8_Block.InitialValues.cs" />
+    <Compile Include="Parameter\ParameterSet.cs" />
+    <Compile Include="Parameter\TaskConfiguration.Acquisition.cs" />
+    <Compile Include="Parameter\TaskConfiguration.Additivierung.cs" />
+    <Compile Include="Parameter\TaskConfiguration.Agr.cs" />
+    <Compile Include="Parameter\TaskConfiguration.AplSae.cs" />
+    <Compile Include="Parameter\TaskConfiguration.BeladCRT.cs" />
+    <Compile Include="Parameter\TaskConfiguration.BeladKennfeld.cs" />
+    <Compile Include="Parameter\TaskConfiguration.BeladLuftmasse.cs" />
+    <Compile Include="Parameter\TaskConfiguration.BeladMittel.cs" />
+    <Compile Include="Parameter\TaskConfiguration.BeladPro.cs" />
+    <Compile Include="Parameter\TaskConfiguration.CAN2Com.cs" />
+    <Compile Include="Parameter\TaskConfiguration.CanCom.cs" />
+    <Compile Include="Parameter\TaskConfiguration.CanIn.cs" />
+    <Compile Include="Parameter\TaskConfiguration.cs" />
+    <Compile Include="Parameter\TaskConfiguration.Dosieren.cs" />
+    <Compile Include="Parameter\TaskConfiguration.DrivePattern.cs" />
+    <Compile Include="Parameter\TaskConfiguration.Grundfos.cs" />
+    <Compile Include="Parameter\TaskConfiguration.Heizen.cs" />
+    <Compile Include="Parameter\TaskConfiguration.IcDosing.cs" />
+    <Compile Include="Parameter\TaskConfiguration.IoTask.cs" />
+    <Compile Include="Parameter\TaskConfiguration.Kommunikation.cs" />
+    <Compile Include="Parameter\TaskConfiguration.MassAirFlow.cs" />
+    <Compile Include="Parameter\TaskConfiguration.PostDiagnose.cs" />
+    <Compile Include="Parameter\TaskConfiguration.PreDiagnose.cs" />
+    <Compile Include="Parameter\TaskConfiguration.Regenerieren.cs" />
+    <Compile Include="Parameter\TaskConfiguration.SaeComm.cs" />
+    <Compile Include="Parameter\TaskConfiguration.ScrHeiz.cs" />
+    <Compile Include="Parameter\TaskConfiguration.SelfRegeneration.cs" />
+    <Compile Include="Parameter\TaskConfiguration.Staudruck.cs" />
+    <Compile Include="Parameter\TaskConfiguration.Tankgeber.cs" />
+    <Compile Include="Parameter\TaskConfiguration.Turnspeed.cs" />
+    <Compile Include="Parameter\TaskConfiguration.VertWatch.cs" />
+    <Compile Include="Parameter\TaskConfiguration.XcpTask.cs" />
+    <Compile Include="Parameter\TaskConfigurationItem.cs" />
+    <Compile Include="Port\Comm.cs" />
+    <Compile Include="Port\SerialDirect.cs" />
+    <Compile Include="ProductionDataBlock.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Protocol\Protocol14.cs" />
+    <Compile Include="Protocol\Protocol15.cs" />
+    <Compile Include="Protocol\ProtocolBase.cs" />
+    <Compile Include="Protocol\TesterProtocol.cs" />
+    <Compile Include="ReportBlock.cs" />
+    <Compile Include="ReturnValue.cs" />
+    <Compile Include="VolatileData.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="obj\Debug\DesignTimeResolveAssemblyReferencesInput.cache" />
+    <None Include="obj\Debug\HJS.ECU.csprojResolveAssemblyReference.cache" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="bin\Debug\HJS.ECU.dll" />
+    <Content Include="bin\Debug\HJS.ECU.pdb" />
+    <Content Include="obj\Debug\HJS.ECU.csproj.FileListAbsolute.txt" />
+    <Content Include="obj\Debug\HJS.ECU.dll" />
+    <Content Include="obj\Debug\HJS.ECU.pdb" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="bin\Release\" />
+    <Folder Include="obj\Debug\TempPE\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

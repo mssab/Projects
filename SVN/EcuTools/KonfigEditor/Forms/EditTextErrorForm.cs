@@ -1,0 +1,75 @@
+﻿/*
+ * Object: EcuDiagnose.Forms.FrameForm
+ * Description: ECU diagnostics form
+ * 
+ * $LastChangedDate: 2015-02-17 12:11:31 +0100 (Di, 17 Feb 2015) $
+ * $LastChangedRevision: 88 $
+ * $LastChangedBy: ksi $
+ * $HeadURL: http://menden22/svn/devel/electronic/app_cs_win32_ecudiagmini/branch/EcuTools/KonfigEditor/Forms/EditTextErrorForm.cs $
+ * 
+ * LastReviewDate: 
+ * LastReviewRevision: 
+ * LastReviewBy: 
+ */
+using System;
+using System.Windows.Forms;
+
+namespace KonfigEditor.Forms
+{
+    /// <summary>Form for editing error language</summary>
+    public partial class EditTextErrorForm : Form
+    {
+        private HJS.ECU.Parameter.ParameterSet mParam;
+        private Controls.LanguageStringUserControl[] lsuc;
+
+        /// <summary>Constructor</summary>
+        /// <param name="param">Parameter set</param>
+        /// <param name="ErrorPosition">Position of error</param>
+        public EditTextErrorForm(HJS.ECU.Parameter.ParameterSet param, int ErrorPosition)
+        {
+            InitializeComponent();
+
+            mParam = param;
+            lsuc = new Controls.LanguageStringUserControl[param.GetUsedLanguages()];
+            for (int i = 0; i < param.GetUsedLanguages(); i++)
+            {
+                lsuc[i] = new Controls.LanguageStringUserControl(param.GetLanguageId(i));
+                lsuc[i].Dock = DockStyle.Fill;
+                flowLayoutPanelStrings.Controls.Add(lsuc[i]);
+            }
+            numericUpDownPosition.Value = ErrorPosition;
+            numericUpDownPosition_ValueChanged(null, EventArgs.Empty);
+        }
+
+        private void buttonOK_Click(object sender, EventArgs e)
+        {
+            buttonApply_Click(sender, e);
+        }
+
+        private void buttonApply_Click(object sender, EventArgs e)
+        {
+            for (int i = 0; i < mParam.GetUsedLanguages(); i++)
+            {
+                lsuc[i].UpdataData(true);
+                mParam.SetEventDisplayed(i, (int)numericUpDownPosition.Value, checkBoxDisplay.Checked);
+                mParam.SetEventOrError(i, (int)numericUpDownPosition.Value, checkBoxEvent.Checked);
+                mParam.SetEventHidden(i, (int)numericUpDownPosition.Value, checkBoxHidden.Checked);
+                mParam.SetEventBlueLed(i, (int)numericUpDownPosition.Value, checkBoxBlueLed.Checked);
+                mParam.SetErrorName(i, (int)numericUpDownPosition.Value, lsuc[i].LanguageString);
+            }
+        }
+
+        private void numericUpDownPosition_ValueChanged(object sender, EventArgs e)
+        {
+            checkBoxDisplay.Checked = mParam.IsEventDisplayed(0, (int)numericUpDownPosition.Value);
+            checkBoxEvent.Checked = mParam.IsEventOrError(0, (int)numericUpDownPosition.Value);
+            checkBoxHidden.Checked = mParam.IsEventHidden(0, (int)numericUpDownPosition.Value);
+            checkBoxBlueLed.Checked = mParam.IsEventBlueLed(0, (int)numericUpDownPosition.Value);
+            for (int i = 0; i < mParam.GetUsedLanguages(); i++)
+            {
+                lsuc[i].LanguageString = mParam.GetErrorName(i, (int)numericUpDownPosition.Value);
+                lsuc[i].UpdataData(false);
+            }
+        }
+    }
+}

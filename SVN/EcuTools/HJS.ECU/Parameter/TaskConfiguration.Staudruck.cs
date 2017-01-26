@@ -1,0 +1,369 @@
+/*
+ * Object: HJS.ECU.Parameter.TaskConfiguration.Staudruck
+ * Description: task configuration for Staudruck
+ * 
+ * $LastChangedDate: 2015-02-27 15:15:54 +0100 (Fr, 27 Feb 2015) $
+ * $LastChangedRevision: 97 $
+ * $LastChangedBy: ksi $
+ * $HeadURL: http://menden22/svn/devel/electronic/app_cs_win32_ecudiagmini/branch/EcuTools/HJS.ECU/Parameter/TaskConfiguration.Staudruck.cs $
+ * 
+ * LastReviewDate: 
+ * LastReviewRevision: 
+ * LastReviewBy: 
+ */
+using System;
+
+namespace HJS.ECU.Parameter
+{
+    public partial class TaskConfiguration
+    {
+        private UInt16 SizeStaudruck9() { return 78; }
+        private bool ImportStaudruck9(UInt16 Offset, ref byte[] Data)
+        {
+            UInt16 ItemPosition = 0;
+            UInt16 DataPosition = 0;
+            if (Offset > 6)
+            {
+                DataPosition = (UInt16)(Offset - 6);   // block header = 6 abziehen
+            }
+            else { return false; }
+            mData = Data;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("TaskCfg->uiCRC", TaskDataType.type_hex_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("TaskCfg->uiExpire", TaskDataType.type_uint_16, DataPosition);
+            mItem[ItemPosition].SetPlausibilityMin(50);
+            mItem[ItemPosition].SetPlausibilityMax(50);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("TaskCfg->uiStacksize", TaskDataType.type_uint_16, DataPosition);
+            mItem[ItemPosition].SetPlausibilityMin(512);
+            mItem[ItemPosition].SetPlausibilityMax(512);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("TaskCfg->ucPrio", TaskDataType.type_uint_8, DataPosition);
+            mItem[ItemPosition].SetPlausibilityMin(70);
+            mItem[ItemPosition].SetPlausibilityMax(70);
+            DataPosition = (UInt16)(DataPosition + 1); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("TaskCfg->ucTimeout", TaskDataType.type_uint_8, DataPosition);
+            mItem[ItemPosition].SetPlausibilityMin(2);
+            mItem[ItemPosition].SetPlausibilityMax(5);
+            DataPosition = (UInt16)(DataPosition + 1); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("ulTxIdentifier", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("siTxOffsetTemp", TaskDataType.type_int_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("fTxFaktorTemp", TaskDataType.type_float_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("eMesswertTemp", TaskDataType.type_enum_mrw_8, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 1); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("siTempPlausibilityMax", TaskDataType.type_int_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("siTempPlausibilityMin", TaskDataType.type_int_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("siTemperaturFailSafe", TaskDataType.type_int_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("ulRxIdentifier", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("siRxOffsetAir", TaskDataType.type_int_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("fRxFaktorAir", TaskDataType.type_float_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("eMesswertAir", TaskDataType.type_enum_mrw_8, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 1); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("eStaudruckStatus", TaskDataType.type_enum_mrw_8, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 1); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("fAirMassFilterConst", TaskDataType.type_float_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("fAirMassKFactor", TaskDataType.type_float_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("siAirMassPlausibilityMax", TaskDataType.type_int_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("siAirMassPlausibilityMin", TaskDataType.type_int_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("ucAirMassExpectedErrorCode", TaskDataType.type_uint_8, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 1); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("uiEngineRunDetection", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("uiAirMassErrorDebounce", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("uiEngineRunErrorDebounce", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("uiCanErrorDebounce", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("uiAirmassMinValueEngineRun", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("ucEngineRunDetectionValue", TaskDataType.type_uint_8, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 1); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("uiEngineRunDetectionMin", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("uiEngineRunDetectionMax", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("uiZeroLimit", TaskDataType.type_uint_16, DataPosition);
+            mItem[ItemPosition].SetPlausibilityMax(10000);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("uiCorrectionLimit", TaskDataType.type_uint_16, DataPosition);
+            mItem[ItemPosition].SetPlausibilityMax(20000);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("fCorrectionFactor", TaskDataType.type_float_32, DataPosition);
+            mItem[ItemPosition].SetPlausibilityMin(0);
+            mItem[ItemPosition].SetPlausibilityMax(5);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("ucFree", TaskDataType.type_hex_8, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 1); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("ulFree_1", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            return ((DataPosition + 6) == (Offset + SizeStaudruck9()));
+        }
+        private UInt16 SizeStaudruck10() { return 94; }
+        private bool ImportStaudruck10(UInt16 Offset, ref byte[] Data)
+        {
+            UInt16 ItemPosition = 0;
+            UInt16 DataPosition = 0;
+            if (Offset > 6)
+            {
+                DataPosition = (UInt16)(Offset - 6);   // block header = 6 abziehen
+            }
+            else { return false; }
+            mData = Data;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("TaskCfg->uiCRC", TaskDataType.type_hex_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("TaskCfg->uiExpire", TaskDataType.type_uint_16, DataPosition);
+            mItem[ItemPosition].SetPlausibilityMin(50);
+            mItem[ItemPosition].SetPlausibilityMax(50);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("TaskCfg->uiStacksize", TaskDataType.type_uint_16, DataPosition);
+            mItem[ItemPosition].SetPlausibilityMin(512);
+            mItem[ItemPosition].SetPlausibilityMax(512);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("TaskCfg->ucPrio", TaskDataType.type_uint_8, DataPosition);
+            mItem[ItemPosition].SetPlausibilityMin(70);
+            mItem[ItemPosition].SetPlausibilityMax(70);
+            DataPosition = (UInt16)(DataPosition + 1); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("TaskCfg->ucTimeout", TaskDataType.type_uint_8, DataPosition);
+            mItem[ItemPosition].SetPlausibilityMin(2);
+            mItem[ItemPosition].SetPlausibilityMax(5);
+            DataPosition = (UInt16)(DataPosition + 1); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("ulTxIdentifier", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("siTxOffsetTemp", TaskDataType.type_int_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("fTxFaktorTemp", TaskDataType.type_float_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("eMesswertTemp", TaskDataType.type_enum_mrw_8, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 1); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("siTempPlausibilityMax", TaskDataType.type_int_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("siTempPlausibilityMin", TaskDataType.type_int_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("siTemperaturFailSafe", TaskDataType.type_int_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("ulRxIdentifier", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("siRxOffsetAir", TaskDataType.type_int_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("fRxFaktorAir", TaskDataType.type_float_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("eMesswertAir", TaskDataType.type_enum_mrw_8, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 1); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("eStaudruckStatus", TaskDataType.type_enum_mrw_8, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 1); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("fAirMassFilterConst", TaskDataType.type_float_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("siAirMassPlausibilityMax", TaskDataType.type_int_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("siAirMassPlausibilityMin", TaskDataType.type_int_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("ucAirMassExpectedErrorCode", TaskDataType.type_uint_8, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 1); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("uiEngineRunDetection", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("uiAirMassErrorDebounce", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("uiEngineRunErrorDebounce", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("uiCanErrorDebounce", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("uiAirmassMinValueEngineRun", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("ucEngineRunDetectionValue", TaskDataType.type_uint_8, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 1); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("uiEngineRunDetectionMin", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("uiEngineRunDetectionMax", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("uiZeroLimit", TaskDataType.type_uint_16, DataPosition);
+            mItem[ItemPosition].SetPlausibilityMax(10000);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("uiCorrectionLimit", TaskDataType.type_uint_16, DataPosition);
+            mItem[ItemPosition].SetPlausibilityMax(20000);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("fCorrectionFactor", TaskDataType.type_float_32, DataPosition);
+            mItem[ItemPosition].SetPlausibilityMin(0);
+            mItem[ItemPosition].SetPlausibilityMax(5);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("ulKFKFactor", TaskDataType.type_kf_id_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("eTypeKFKFactor", TaskDataType.type_kf_type_8, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 1); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("ulFree[0]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("ulFree[1]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("ulFree[2]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("ulFree[3]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("ulFree[4]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            return ((DataPosition + 6) == (Offset + SizeStaudruck10()));
+        }
+    }
+}

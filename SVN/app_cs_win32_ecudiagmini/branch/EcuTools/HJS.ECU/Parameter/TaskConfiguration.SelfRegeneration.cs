@@ -1,0 +1,87 @@
+﻿/*
+ * Object: HJS.ECU.Parameter.TaskConfiguration.SelfRegeneration
+ * Description: task configuration for detecting self regenerations
+ * 
+ * $LastChangedDate: 2014-03-21 16:16:39 +0100 (Fr, 21 Mrz 2014) $
+ * $LastChangedRevision: 47 $
+ * $LastChangedBy: ksi $
+ * $HeadURL: http://menden22/svn/devel/electronic/app_cs_win32_ecudiagmini/branch/EcuTools/HJS.ECU/Parameter/TaskConfiguration.SelfRegeneration.cs $
+ * 
+ * LastReviewDate: 
+ * LastReviewRevision: 
+ * LastReviewBy: 
+ */
+using System;
+
+namespace HJS.ECU.Parameter
+{
+    public partial class TaskConfiguration
+    {
+        private UInt16 SizeSelfRegeneration10() { return 34; }
+        private bool ImportSelfRegeneration10(UInt16 Offset, ref byte[] Data)
+        {
+            UInt16 ItemPosition = 0;
+            UInt16 DataPosition = 0;
+            if (Offset > 6)
+            {
+                DataPosition = (UInt16)(Offset - 6);   // block header = 6 abziehen
+            }
+            else { return false; }
+            mData = Data;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("TaskCfg->uiCRC", TaskDataType.type_hex_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("TaskCfg->uiExpire", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("TaskCfg->uiStacksize", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("TaskCfg->ucPrio", TaskDataType.type_uint_8, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 1); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("TaskCfg->ucTimeout", TaskDataType.type_uint_8, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 1); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("siMinSelfRegTemperatur", TaskDataType.type_int_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("uiMinSelfRegSeconds", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("uiMaxSelfRegPause", TaskDataType.type_uint_16, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 2); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("ulFree[0]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("ulFree[1]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("ulFree[2]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("ulFree[3]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            Array.Resize(ref mItem, ItemPosition + 1);
+            mItem[ItemPosition] = new TaskConfigurationItem("ulFree[4]", TaskDataType.type_hex_32, DataPosition);
+            DataPosition = (UInt16)(DataPosition + 4); ItemPosition++;
+
+            return ((DataPosition + 6) == (Offset + SizeSelfRegeneration10()));
+        }
+    }
+}

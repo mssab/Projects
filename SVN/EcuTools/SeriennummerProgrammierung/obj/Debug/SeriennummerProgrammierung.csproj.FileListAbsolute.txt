@@ -1,0 +1,15 @@
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\SeriennummerProgrammierung\bin\Debug\SeriennummerProgrammierung.exe.config
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\SeriennummerProgrammierung\bin\Debug\SeriennummerProgrammierung.XML
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\SeriennummerProgrammierung\bin\Debug\SeriennummerProgrammierung.exe
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\SeriennummerProgrammierung\bin\Debug\SeriennummerProgrammierung.pdb
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\SeriennummerProgrammierung\bin\Debug\SeriennummerProgrammierung.exe.CodeAnalysisLog.xml
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\SeriennummerProgrammierung\bin\Debug\SeriennummerProgrammierung.exe.lastcodeanalysissucceeded
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\SeriennummerProgrammierung\bin\Debug\HJS.ECU.dll
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\SeriennummerProgrammierung\bin\Debug\HJS.ECU.pdb
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\SeriennummerProgrammierung\bin\Debug\HJS.ECU.xml
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\SeriennummerProgrammierung\obj\Debug\SeriennummerProgrammierung.csprojResolveAssemblyReference.cache
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\SeriennummerProgrammierung\obj\Debug\SeriennummerProgrammierung.Forms.SerialNrForm.resources
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\SeriennummerProgrammierung\obj\Debug\SeriennummerProgrammierung.Properties.Resources.resources
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\SeriennummerProgrammierung\obj\Debug\SeriennummerProgrammierung.csproj.GenerateResource.Cache
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\SeriennummerProgrammierung\obj\Debug\SeriennummerProgrammierung.exe
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\SeriennummerProgrammierung\obj\Debug\SeriennummerProgrammierung.pdb

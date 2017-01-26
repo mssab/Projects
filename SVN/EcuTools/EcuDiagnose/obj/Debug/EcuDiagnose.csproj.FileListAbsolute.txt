@@ -1,0 +1,16 @@
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\EcuDiagnose\bin\Debug\ecudiagnose.exe.config
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\EcuDiagnose\bin\Debug\ecudiagnose.xml
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\EcuDiagnose\bin\Debug\ecudiagnose.exe
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\EcuDiagnose\bin\Debug\ecudiagnose.pdb
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\EcuDiagnose\bin\Debug\ecudiagnose.exe.CodeAnalysisLog.xml
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\EcuDiagnose\bin\Debug\ecudiagnose.exe.lastcodeanalysissucceeded
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\EcuDiagnose\bin\Debug\HJS.ECU.dll
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\EcuDiagnose\bin\Debug\HJS.ECU.pdb
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\EcuDiagnose\bin\Debug\HJS.ECU.xml
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\EcuDiagnose\obj\Debug\EcuDiagnose.csprojResolveAssemblyReference.cache
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\EcuDiagnose\obj\Debug\EcuDiagnose.Forms.FrameForm.resources
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\EcuDiagnose\obj\Debug\EcuDiagnose.Forms.OptionsForm.resources
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\EcuDiagnose\obj\Debug\EcuDiagnose.Properties.Resources.resources
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\EcuDiagnose\obj\Debug\EcuDiagnose.csproj.GenerateResource.Cache
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\EcuDiagnose\obj\Debug\ecudiagnose.exe
+C:\SVN\app_cs_win32_ecudiagmini\branch\EcuTools\EcuDiagnose\obj\Debug\ecudiagnose.pdb

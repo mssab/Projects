@@ -1,0 +1,368 @@
+/*
+ * Object: HJS.ECU.Diag.ErrorRing
+ * Description: Error history
+ * 
+ * $LastChangedDate: 2013-12-02 10:31:16 +0100 (Mo, 02 Dez 2013) $
+ * $LastChangedRevision: 26 $
+ * $LastChangedBy: ksi $
+ * $HeadURL: http://menden22/svn/devel/electronic/app_cs_win32_ecudiagmini/branch/EcuTools/HJS.ECU/Diagnostics/ErrorRing.cs $
+ * 
+ * LastReviewDate: 
+ * LastReviewRevision: 
+ * LastReviewBy: 
+ */
+using System;
+using System.Xml;
+using HJS.ECU.Protocol;
+
+namespace HJS.ECU.Diagnostics
+{
+    /// <summary>Error history entry of ECU</summary>
+    public class ErrorRingItem
+    {
+        /// <summary>Entry date</summary>
+        public DateTime Date;
+        /// <summary>Task identifier of entry creator</summary>
+        public byte TaskId;
+        /// <summary>Task message number of entry creator</summary>
+        public byte LfdNo;
+        /// <summary>Error number</summary>
+        public byte ErrorNo;
+        /// <summary>Environmental value 1</summary>
+        public UInt16 Wert1;
+        /// <summary>Environmental value 2</summary>
+        public UInt16 Wert2;
+        /// <summary>Environmental value 3</summary>
+        public UInt16 Wert3;
+    }
+
+    /// <summary>Error history of HJS-ECU</summary>
+    public class ErrorRing
+    {
+        /// <summary>Array of entry item</summary>
+        private ErrorRingItem[] mItem;
+
+        /// <summary>Constructor</summary>
+        public ErrorRing()
+        {
+            mItem = new ErrorRingItem[0];
+        }
+
+        /// <summary>Import error ring sector from byte array</summary>
+        /// <param name="Data">Raw byte array</param>
+        /// <param name="protocol">Reference to active protocol object</param>
+        public void ImportSector(ref byte[] Data, ref ProtocolBase protocol)
+        {
+            int ItemCount = mItem.Length;
+            for (UInt16 ByteInData = 0; ByteInData < (32768 - 12); ByteInData += 12)
+            {
+                if ((ByteInData % 4096) > (4096 - 12))
+                {
+                    // import only 12-byte-rows in each 4k block
+                    ByteInData += (UInt16)(4096 % 12);
+                }else{
+                    // ignore empty or erased items
+                    if (/*((Data[ByteInData] == 0x00)
+                        && (Data[ByteInData + 1] == 0x00)
+                        && (Data[ByteInData + 2] == 0x00)
+                        && (Data[ByteInData + 3] == 0x00)
+                        && (Data[ByteInData + 4] == 0x00))
+                        ||*/
+                        ((Data[ByteInData] == 0xFF)
+                        && (Data[ByteInData + 1] == 0xFF)
+                        && (Data[ByteInData + 2] == 0xFF)
+                        && (Data[ByteInData + 3] == 0xFF)
+                        && (Data[ByteInData + 4] == 0xFF)))
+                    {
+                        // ignore this item
+                    }
+                    else
+                    {
+                        Array.Resize(ref mItem, ItemCount + 1);
+                        mItem[ItemCount] = new ErrorRingItem();
+
+                        // date time
+                        UInt32 MinuteSinceProgramming = (UInt32)(((Data[ByteInData + 2] * 256) + Data[ByteInData + 1]) * 256) + Data[ByteInData];
+                        mItem[ItemCount].Date = protocol.GetDateTimeFromMinute(MinuteSinceProgramming);
+
+                        mItem[ItemCount].TaskId = Data[ByteInData + 3];
+                        mItem[ItemCount].LfdNo = Data[ByteInData + 4];
+                        mItem[ItemCount].ErrorNo = Data[ByteInData + 5];
+                        mItem[ItemCount].Wert1 = (UInt16)((Data[ByteInData + 7] * 256) + Data[ByteInData + 6]);
+                        mItem[ItemCount].Wert2 = (UInt16)((Data[ByteInData + 9] * 256) + Data[ByteInData + 8]);
+                        mItem[ItemCount].Wert3 = (UInt16)((Data[ByteInData + 11] * 256) + Data[ByteInData + 10]);
+                        ItemCount++;
+                    }
+                }
+            }
+        }
+
+        /// <summary>Get number of error ring items</summary>
+        /// <returns>Number of error ring items</returns>
+        public int NumberOfItems()
+        {
+            if (mItem == null)
+            {
+                return 0;
+            }
+            else
+            {
+                return mItem.Length;
+            }
+        }
+
+        /// <summary>Delete error ring items</summary>
+        public void DeleteItems()
+        {
+            mItem = new ErrorRingItem[0];
+        }
+
+        /// <summary>Export error ring data to a XML file</summary>
+        /// <param name="Filename">Target file name</param>
+        /// <param name="protocol">Reference to protocol to connected ECU</param>
+        public void XmlExport(string Filename, ref ProtocolBase protocol)
+        {
+            XmlWriter xf = null;
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.OmitXmlDeclaration = false;
+            settings.ConformanceLevel = ConformanceLevel.Document;
+            settings.Encoding = System.Text.Encoding.UTF8;  //"iso-8859-1";
+            settings.Indent = true;
+            settings.IndentChars = "\t";
+            settings.NewLineOnAttributes = false;
+            try
+            {
+                xf = XmlWriter.Create(Filename, settings);
+                xf.WriteStartElement("err_ring_root");
+
+                xf.WriteStartElement("ECU");
+                xf.WriteStartElement("Serialnumber");
+                xf.WriteValue(protocol.SerialNumber);
+                xf.WriteEndElement(); // S/N
+                xf.WriteStartElement("Hardware");
+                xf.WriteValue(string.Format("{0}.{1}.{2}", protocol.HardwareVersion.Hauptversion, protocol.HardwareVersion.Nebenversion, protocol.HardwareVersion.Revision));
+                xf.WriteEndElement(); // HW V
+                xf.WriteStartElement("Software");
+                xf.WriteValue(string.Format("{0}.{1}.{2}", protocol.SoftwareVersion.Hauptversion, protocol.SoftwareVersion.Nebenversion, protocol.SoftwareVersion.Revision));
+                xf.WriteEndElement(); // SW V
+                xf.WriteStartElement("Configuration");
+                xf.WriteValue(string.Format("{0}.{1}.{2}", protocol.ConfigurationVersion.Hauptversion, protocol.ConfigurationVersion.Nebenversion, protocol.ConfigurationVersion.Revision));
+                xf.WriteEndElement(); // CFG V
+                //xf.WriteStartElement("Datamap");
+                //xf.WriteValue(string.Format("{0}.{1}.{2}", protocol.DatamapVersion.Hauptversion, protocol.DatamapVersion.Nebenversion, protocol.DatamapVersion.Revision));
+                //xf.WriteEndElement(); // KF V
+                xf.WriteEndElement(); // ECU
+
+                xf.WriteStartElement("ring_data");
+                for (int item = 0; item < mItem.Length; item++)
+                {
+                    xf.WriteStartElement("item");
+                    xf.WriteAttributeString("row", String.Format("{0}", item));
+
+                    xf.WriteStartElement("date");
+                    xf.WriteValue(mItem[item].Date);
+                    xf.WriteEndElement();
+
+                    xf.WriteStartElement("error_no");
+                    xf.WriteValue(mItem[item].ErrorNo);
+                    xf.WriteEndElement();
+
+                    xf.WriteStartElement("error_name");
+                    xf.WriteValue(protocol.GetErrorName(mItem[item].ErrorNo));
+                    xf.WriteEndElement();
+
+                    xf.WriteStartElement("error_type");
+                    xf.WriteValue(protocol.IsEventOrError((UInt16)item) ? "Event" : "Fehler");
+                    xf.WriteEndElement();
+
+                    if (mItem[item].TaskId == 255)
+                    {
+                        // Verhalten aenderung
+                        xf.WriteStartElement("task");
+                        xf.WriteValue(mItem[item].TaskId);
+                        xf.WriteEndElement();
+
+                        xf.WriteStartElement("lfd_no");
+                        xf.WriteValue(mItem[item].LfdNo);
+                        xf.WriteEndElement();
+
+                        xf.WriteStartElement("mask");
+                        xf.WriteValue(mItem[item].Wert1);
+                        xf.WriteEndElement();
+                    }
+                    else
+                    {
+                        // Fehler / Event aufgetreten
+                        xf.WriteStartElement("task");
+                        xf.WriteValue(mItem[item].TaskId);
+                        xf.WriteEndElement();
+
+                        xf.WriteStartElement("lfd_no");
+                        xf.WriteValue(mItem[item].LfdNo);
+                        xf.WriteEndElement();
+
+                        if (mItem[item].ErrorNo > 63)
+                        {
+                            xf.WriteStartElement("value_1_value");
+                            xf.WriteValue(mItem[item].Wert1);
+                            xf.WriteEndElement();
+
+                            xf.WriteStartElement("value_2_value");
+                            xf.WriteValue(mItem[item].Wert2);
+                            xf.WriteEndElement();
+
+                            xf.WriteStartElement("value_3_value");
+                            xf.WriteValue(mItem[item].Wert3);
+                            xf.WriteEndElement();
+                        }
+                        else
+                        {
+                            xf.WriteStartElement("value_1_name");
+                            xf.WriteValue(protocol.GetValueName(protocol.GetValuePosition(protocol.ErrorRingFigure(mItem[item].ErrorNo, 0))));
+                            xf.WriteEndElement();
+
+                            xf.WriteStartElement("value_1_value");
+                            xf.WriteValue(protocol.GetValueString(protocol.GetValuePosition(protocol.ErrorRingFigure(mItem[item].ErrorNo, 0)), mItem[item].Wert1));
+                            xf.WriteEndElement();
+
+                            xf.WriteStartElement("value_1_unit");
+                            xf.WriteValue(protocol.GetValueUnit(protocol.GetValuePosition(protocol.ErrorRingFigure(mItem[item].ErrorNo, 0))));
+                            xf.WriteEndElement();
+
+                            xf.WriteStartElement("value_2_name");
+                            xf.WriteValue(protocol.GetValueName(protocol.GetValuePosition(protocol.ErrorRingFigure(mItem[item].ErrorNo, 1))));
+                            xf.WriteEndElement();
+
+                            xf.WriteStartElement("value_2_value");
+                            xf.WriteValue(protocol.GetValueString(protocol.GetValuePosition(protocol.ErrorRingFigure(mItem[item].ErrorNo, 1)), mItem[item].Wert2));
+                            xf.WriteEndElement();
+
+                            xf.WriteStartElement("value_2_unit");
+                            xf.WriteValue(protocol.GetValueUnit(protocol.GetValuePosition(protocol.ErrorRingFigure(mItem[item].ErrorNo, 1))));
+                            xf.WriteEndElement();
+
+                            xf.WriteStartElement("value_3_name");
+                            xf.WriteValue(protocol.GetValueName(protocol.GetValuePosition(protocol.ErrorRingFigure(mItem[item].ErrorNo, 2))));
+                            xf.WriteEndElement();
+
+                            xf.WriteStartElement("value_3_value");
+                            xf.WriteValue(protocol.GetValueString(protocol.GetValuePosition(protocol.ErrorRingFigure(mItem[item].ErrorNo, 2)), mItem[item].Wert3));
+                            xf.WriteEndElement();
+
+                            xf.WriteStartElement("value_3_unit");
+                            xf.WriteValue(protocol.GetValueUnit(protocol.GetValuePosition(protocol.ErrorRingFigure(mItem[item].ErrorNo, 2))));
+                            xf.WriteEndElement();
+                        }
+                    }
+
+                    xf.WriteEndElement(); // item
+                }
+                xf.WriteEndElement(); // data
+                xf.WriteEndElement(); // root
+                xf.Flush();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception during opening XML file: {0}", ex.Message);
+            }
+            finally
+            {
+                xf.Close();
+            }
+        }
+
+        /// <summary>Export error ring data to a CSV file</summary>
+        /// <param name="Filename">Target file name</param>
+        /// <param name="protocol">Reference to protocol to connected ECU</param>
+        public void CsvExport(string Filename, ref ProtocolBase protocol)
+        {
+            System.IO.StreamWriter writer = new System.IO.StreamWriter(Filename, false);
+            string _ProgDate = "";
+
+            if (protocol.LocalTime)
+            {
+                _ProgDate = protocol.DateOfProgramming.ToLocalTime().ToString("dd.MM.yyyy HH:mm");
+            }
+            else
+            {
+                _ProgDate = protocol.DateOfProgramming.ToUniversalTime().ToString("dd.MM.yyyy HH:mm UTC");
+            }
+            //
+            string header = String.Format("Production date: {0} SN: {1} HW:V{2}.{3}.{4} SW:V{5}.{6}.{7} CFG:V{8}.{9}.{10}",
+                _ProgDate,
+                protocol.SerialNumber,
+                protocol.HardwareVersion.Hauptversion,
+                protocol.HardwareVersion.Nebenversion,
+                protocol.HardwareVersion.Revision,
+                protocol.SoftwareVersion.Hauptversion,
+                protocol.SoftwareVersion.Nebenversion,
+                protocol.SoftwareVersion.Revision,
+                protocol.ConfigurationVersion.Hauptversion,
+                protocol.ConfigurationVersion.Nebenversion,
+                protocol.ConfigurationVersion.Revision
+
+            );
+            writer.WriteLine(header);
+
+            string title = String.Format("\"Datum/Zeit\"{0}\"Task No.\"{0}\"Lfd. No.\"{0}\"Fehler No.\"{0}\"Fehlername\"{0}\"Fehler/Ereignis\"{0}\"Zustand\"{0}\"Name 1\"{0}\"Wert 1\"{0}\"Einheit 1\"{0}\"Name 2\"{0}\"Wert 2\"{0}\"Einheit 2\"{0}\"Name 3\"{0}\"Wert 3\"{0}\"Einheit 3\"",
+                System.Globalization.CultureInfo.CurrentCulture.TextInfo.ListSeparator);
+            writer.WriteLine(title);
+
+            string _row_start = "";
+            string _row_tail = "";
+            for (int item = 0; item < mItem.Length; item++)
+            {
+                if (protocol.LocalTime)
+                {
+                    _ProgDate = mItem[item].Date.ToLocalTime().ToString("dd.MM.yyyy HH:mm");
+                }
+                else
+                {
+                    _ProgDate = mItem[item].Date.ToUniversalTime().ToString("dd.MM.yyyy HH:mm UTC");
+                }
+                _row_start = String.Format("\"{1}\"{0}{2}{0}{3}{0}{4}{0}\"{5}\"{0}\"{6}\"",
+                    System.Globalization.CultureInfo.CurrentCulture.TextInfo.ListSeparator,
+                    _ProgDate,
+                    mItem[item].TaskId,
+                    mItem[item].LfdNo,
+                    mItem[item].ErrorNo,
+                    protocol.GetErrorName(mItem[item].ErrorNo),
+                    protocol.IsEventOrError(mItem[item].ErrorNo) ? "Event" : "Fehler");
+
+                if (mItem[item].TaskId == 255)
+                {
+                    // Verhalten aenderung
+                    _row_tail = String.Format("{0}\"aktiv\"{0}\"Intern\"{0}\"{1}\"",
+                        System.Globalization.CultureInfo.CurrentCulture.TextInfo.ListSeparator,
+                        mItem[item].Wert1);
+                }
+                else
+                {
+                    // Fehler / Event aufgetreten
+                    if (mItem[item].ErrorNo > 63)
+                    {
+                        _row_tail = String.Format("{0}\"sporadisch\"{0}\"\"{0}\"{1}\"{0}\"\"{0}\"\"{0}\"{2}\"{0}\"\"{0}\"\"{0}\"{3}\"{0}\"\"",
+                            System.Globalization.CultureInfo.CurrentCulture.TextInfo.ListSeparator,
+                            mItem[item].Wert1, mItem[item].Wert2, mItem[item].Wert3);
+                    }
+                    else
+                    {
+                        _row_tail = String.Format("{0}\"sporadisch\"{0}\"{1}\"{0}\"{2}\"{0}\"{3}\"{0}\"{4}\"{0}\"{5}\"{0}\"{6}\"{0}\"{7}\"{0}\"{8}\"{0}\"{9}\"",
+                            System.Globalization.CultureInfo.CurrentCulture.TextInfo.ListSeparator,
+                            protocol.GetValueName(protocol.GetValuePosition(protocol.ErrorRingFigure(mItem[item].ErrorNo, 0))),
+                            protocol.GetValueString(protocol.GetValuePosition(protocol.ErrorRingFigure(mItem[item].ErrorNo, 0)), mItem[item].Wert1),
+                            protocol.GetValueUnit(protocol.GetValuePosition(protocol.ErrorRingFigure(mItem[item].ErrorNo, 0))),
+                            protocol.GetValueName(protocol.GetValuePosition(protocol.ErrorRingFigure(mItem[item].ErrorNo, 1))),
+                            protocol.GetValueString(protocol.GetValuePosition(protocol.ErrorRingFigure(mItem[item].ErrorNo, 1)), mItem[item].Wert2),
+                            protocol.GetValueUnit(protocol.GetValuePosition(protocol.ErrorRingFigure(mItem[item].ErrorNo, 1))),
+                            protocol.GetValueName(protocol.GetValuePosition(protocol.ErrorRingFigure(mItem[item].ErrorNo, 2))),
+                            protocol.GetValueString(protocol.GetValuePosition(protocol.ErrorRingFigure(mItem[item].ErrorNo, 2)), mItem[item].Wert3),
+                            protocol.GetValueUnit(protocol.GetValuePosition(protocol.ErrorRingFigure(mItem[item].ErrorNo, 2))));
+                    }
+                }
+                writer.WriteLine(String.Format("{0}{1}", _row_start, _row_tail));
+            }
+            writer.Close();
+        }
+    }
+}
