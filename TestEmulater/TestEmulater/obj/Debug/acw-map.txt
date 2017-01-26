@@ -1,0 +1,4 @@
+TestEmulater.MainActivity, TestEmulater;md5e9a33913a011485580f939a4f173a295.MainActivity
+TestEmulater.MainActivity, TestEmulater, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null;md5e9a33913a011485580f939a4f173a295.MainActivity
+TestEmulater.MainActivity;md5e9a33913a011485580f939a4f173a295.MainActivity
+testemulater.MainActivity;md5e9a33913a011485580f939a4f173a295.MainActivity
